@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Falling Shapes Game</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Animate.css -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            overflow: hidden; /* Để ngăn chặn thanh cuộn */
+            cursor: none; /* Ẩn con trỏ chuột */
+            background-color: #fff1f6; /* Màu nền hồng nhẹ */
+        }
+        .cursor-img {
+            z-index: 2;
+            width: 40px;
+            height: 40px;
+            position: absolute;
+            pointer-events: none; /* Để ngăn chặn sự kiện chuột trên hình ảnh */
+            transform: translate(-50%, -50%);
+            transition: all 0.2s all; /* Thêm chuyển đổi để thay đổi hình dạng mượt mà */
+        }
+        .shape {
+            position: absolute;
+            border-radius: 5px;
+        }
+        .triangle {
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-bottom: 40px solid hsl(0, 70%, 70%);
+        }
+        .semi-circle {
+            width: 40px;
+            height: 20px;
+            border-radius: 0 0 20px 20px;
+            background-color: hsl(60, 70%, 70%);
+            position: relative;
+        }
+        .shape-1 {
+            width: 30px;
+            height: 30px;
+            background-color: hsl(120, 70%, 70%);
+            border-radius: 10px;
+        }
+        .shape-2 {
+            width: 30px;
+            height: 30px;
+            background-color: hsl(180, 70%, 70%);
+            border-radius: 50%;
+        }
+        .shape-3 {
+            width: 40px;
+            height: 20px;
+            background-color: hsl(240, 70%, 70%);
+            border-radius: 0 0 20px 20px;
+        }
+        .heart {
+            z-index: 3;
+            position: absolute;
+            font-size: 30px;
+            pointer-events: none;
+            transition: transform 0.5s ease-in, opacity 0.3s ease-out;
+            filter: hue-rotate(0deg); /* Bắt đầu với hue-rotate 0 độ */
+        }
+        .heart-jump {
+            /* Sẽ được cập nhật bởi JavaScript */
+        }
+        .heart-fade {
+            opacity: 0.9; /* Điều chỉnh opacity thành 0.9 */
+        }
+        .centered-top {
+            background-color: #7931ffb7;
+            padding: 5px 10px;
+            color: #fff;
+            font-size: large;
+            margin-top: 15px;
+            position: absolute;
+            top: 0;
+            left: 50%;
+            border-radius: 10px;
+        }
+        .rotating {
+            animation: rotate 5s linear infinite;
+        }
+
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        @keyframes scale {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.5);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        @keyframes descale {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(0.5);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        .scaling {
+            animation: scale .5s forwards;
+        }
+        .descaling {
+            animation: descale .5s forwards;
+        }
+    </style>
+</head>
+<body>
+    <img src="data:image/png;base64,YOUR_BASE64_IMAGE_FOR_CIRCLE" class="cursor-img" id="cursor-img">
+    <div id="game">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div id="game-score" class="centered-top text-white">
+                        Hi!
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Game Script -->
+    <script>
+        let score = 0
+        const gameScore = document.getElementById('game-score');
+        const gameArea = document.getElementById('game');
+        const cursorImg = document.getElementById('cursor-img');
+        const shapeInterval = 800; // Khoảng thời gian tạo hình khối (ms)
+        const hueInterval = 1000; // Khoảng thời gian thay đổi màu (ms)
+        const catCloseBase64 = `
+        data:image/png;base64,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
+        `;
+        const catOpenBase64 = `
+        data:image/png;base64,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
+        `;
+
+        function increaseScore(point) {
+            gameScore.innerText = `✨ ${score += (point || 1)}`;
+            gameScore.classList.remove('descaling');
+            gameScore.classList.remove('scaling');
+            setTimeout(()=>{
+                gameScore.classList.add('scaling');
+            },100)
+        }
+
+        function decreaseScore(point) {
+            gameScore.innerText = `✨ ${score -= (point || 1)}`;
+            gameScore.classList.remove('scaling');
+            gameScore.classList.remove('descaling');
+            setTimeout(()=>{
+            gameScore.classList.add('descaling');
+            },100)
+        }
+
+        function getRandomShape() {
+            const shapes = ['triangle', 'semi-circle', 'shape-1', 'shape-2', 'shape-3'];
+            const randomShape = shapes[Math.floor(Math.random() * shapes.length)];
+            return randomShape;
+        }
+
+        function createShapes() {
+            const numberOfShapes = Math.floor(Math.random() * 2) + 1; // Tạo ngẫu nhiên từ 3 đến 6 hình
+            for (let i = 0; i < numberOfShapes; i++) {
+                createShape();
+            }
+        }
+
+        function createShape() {
+            const shape = document.createElement('div');
+            const shapeType = getRandomShape();
+            shape.className = `shape rotating ${shapeType}`;
+            shape.style.top = `-${parseInt(shape.style.height) || 40}px`;
+            shape.style.left = `${Math.random() * (window.innerWidth - 40)}px`;
+            gameArea.appendChild(shape);
+            dropShape(shape);
+        }
+
+        function dropShape(shape) {
+            let pos = 0;
+            const shapeHeight = parseInt(shape.style.height) || 40;
+            const interval = setInterval(() => {
+                if (pos >= window.innerHeight - shapeHeight) {
+                    clearInterval(interval);
+                    shape.remove();
+                    if (!shape.isRemoved) decreaseScore();
+                    return;
+                }
+                pos += 5;
+                shape.style.top = `${pos}px`;
+                checkCollision(shape);
+            }, 20);
+        }
+
+        function checkCollision(shape) {
+            const shapeRect = shape.getBoundingClientRect();
+            const cursorRect = cursorImg.getBoundingClientRect();
+            if (shapeRect.top < cursorRect.bottom &&
+                shapeRect.bottom > cursorRect.top &&
+                shapeRect.left < cursorRect.right &&
+                shapeRect.right > cursorRect.left) {
+                createHeart(shapeRect.left + shapeRect.width / 2, shapeRect.top);
+                shape.remove();
+                shape.isRemoved = true;
+                changeCursorShape();
+                increaseScore();
+            }
+        }
+
+        function changeCursorShape() {
+            cursorImg.src = catOpenBase64;
+            setTimeout(() => {
+                cursorImg.src = catCloseBase64;
+            }, 300);
+        }
+
+        function createHeart(x, y) {
+            const heart = document.createElement('div');
+            heart.className = 'heart';
+            heart.innerHTML = '❤️';
+            heart.style.left = `${x}px`;
+            heart.style.top = `${y}px`;
+            gameArea.appendChild(heart);
+
+            // Thực hiện hiệu ứng nhảy lên và mờ dần
+            const jumpDistance = Math.random() * 40 - 70; // Tạo khoảng cách nhảy từ -30px đến -70px
+            setTimeout(() => {
+                heart.style.transform = `translateY(${jumpDistance}px)`;
+                setTimeout(() => {
+                    heart.classList.add('heart-fade');
+                }, 300); // Sau khi nhảy lên xong thì mờ dần
+            }, 0);
+
+            // Thay đổi màu sắc liên tục
+            let hue = 0;
+            setInterval(() => {
+                hue = (hue + Math.random() * 360) % 360; // Thay đổi ngẫu nhiên từ 0 đến 360 độ
+                heart.style.filter = `hue-rotate(${hue}deg)`;
+            }, hueInterval);
+        }
+
+        function moveCursor(event) {
+            cursorImg.style.left = `${event.pageX}px`;
+            cursorImg.style.top = `${event.pageY}px`;
+        }
+
+        cursorImg.src = catCloseBase64;
+        // Tạo hình khối liên tục
+        setInterval(createShapes, shapeInterval);
+
+        document.addEventListener('mousemove', moveCursor);
+    </script>
+</body>
+</html>
