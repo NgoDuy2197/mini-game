@@ -1,77 +1,154 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Random Hearts</title>
-    <style>
-        body {
-            margin: 0;
-            height: 100vh;
-            overflow: hidden;
-            background-color: #f0f0f0;
-            position: relative;
-        }
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Random Hearts</title>
+        <style>
+            body {
+                margin: 0;
+                height: 100vh;
+                overflow: hidden;
+                background-color: #fdfaff;
+                position: relative;
+            }
 
-        .heart {
-            position: absolute;
-            font-size: 30px;
-            color: red;
-            opacity: 0;
-            transition: opacity 0.5s;
-        }
-    </style>
-</head>
-<body>
+            .heart {
+                position: absolute;
+                font-size: 30px;
+                color: red;
+                opacity: 0;
+                transition: opacity 0.5s;
+            }
+        </style>
+    </head>
+    <body>
+        <script>
+            // Mảng gồm 10 emoji
+            const emojis = [
+                "❤️",
+                "😘",
+                "💖",
+                "💍",
+                "🌹",
+                "💌",
+                "💕",
+                "😍",
+                "🌈",
+                "💫",
+            ]
 
-<script>
-    // Function to create a heart element
-    function createHeart() {
-        const heart = document.createElement('div');
-        heart.innerText = '❤️';
-        heart.classList.add('heart');
-        document.body.appendChild(heart);
-        return heart;
-    }
+            // Mảng gồm 10 từ tiếng Anh dành cho người yêu
+            const words = [
+                "Darling",
+                "Sweetheart",
+                "Love",
+                "Angel",
+                "Honey",
+                "Beloved",
+                "Dear",
+                "Treasure",
+                "Babe",
+                "Soulmate",
+                "Xinh đẹp",
+                "Dễ thương",
+                "Dịu dàng",
+                "Thông minh",
+                "Tài năng",
+                "Chu đáo",
+                "Hiểu chuyện",
+                "Sáng suốt",
+                "Tự tin",
+                "Quyến rũ",
+                "Duyên dáng",
+                "Tốt bụng",
+                "Ấm áp",
+                "Chuẩn mực",
+                "Đáng yêu",
+                "Chung thủy",
+                "Ngọt ngào",
+                "Trách nhiệm",
+                "Tinh tế",
+                "Kiên nhẫn",
+            ]
 
-    // Function to randomly position a heart on the screen
-    function randomPosition(heart) {
-        const x = Math.random() * (window.innerWidth - 30); // Random x position
-        const y = Math.random() * (window.innerHeight - 30); // Random y position
-        heart.style.left = `${x}px`;
-        heart.style.top = `${y}px`;
-    }
+            // Hàm tạo màu ngẫu nhiên dạng hex (#RRGGBB)
+            function getRandomColor() {
+                const letters = "0123456789ABCDEF"
+                let color = "#"
+                for (let i = 0; i < 6; i++) {
+                    color += letters[Math.floor(Math.random() * 16)]
+                }
+                return color
+            }
 
-    // Function to show hearts
-    function showHearts() {
-        // Generate a random number of hearts between 9 and 15
-        const numberOfHearts = Math.floor(Math.random() * (15 - 9 + 1)) + 9;
+            // Hàm lấy ngẫu nhiên 1 từ từ mảng 'words' và tạo màu chữ ngẫu nhiên
+            function getRandomWord() {
+                const randomIndex = Math.floor(Math.random() * words.length)
+                const randomWord = words[randomIndex]
+                const color = getRandomColor()
+                return `<span style="color:${color}">${randomWord}</span>`
+            }
 
-        for (let i = 0; i < numberOfHearts; i++) {
-            const heart = createHeart();
-            randomPosition(heart);
+            // Hàm lấy ngẫu nhiên 1 emoji từ mảng 'emojis'
+            function getRandomEmoji() {
+                const randomIndex = Math.floor(Math.random() * emojis.length)
+                return emojis[randomIndex]
+            }
 
-            // Make the heart visible
-            heart.style.opacity = 1;
+            // Hàm lấy ngẫu nhiên 1 giá trị (có thể là từ hoặc emoji)
+            function getRandomValue() {
+                // Chọn ngẫu nhiên giữa emoji và từ
+                return Math.random() < 0.7 ? getRandomEmoji() : getRandomWord()
+            }
 
-            // Random lifetime for each heart between 1 to 3 seconds
-            const randomTime = Math.random() * (3000 - 1000) + 1000;
+            // Function to create a heart element
+            function createHeart() {
+                const heart = document.createElement("div")
+                heart.innerHTML = `<span>${getRandomValue()}</span>`
+                heart.classList.add("heart")
+                document.body.appendChild(heart)
+                return heart
+            }
 
-            // Remove the heart after randomTime
-            setTimeout(() => {
-                heart.style.opacity = 0;
-                setTimeout(() => heart.remove(), 500); // Remove the heart after it fades out
-            }, randomTime);
-        }
+            // Function to randomly position a heart on the screen
+            function randomPosition(heart) {
+                const x = Math.random() * (window.innerWidth - 30) // Random x position
+                const y = Math.random() * (window.innerHeight - 30) // Random y position
+                heart.style.left = `${x}px`
+                heart.style.top = `${y}px`
+            }
 
-        // Show hearts again after a random time between 1 to 3 seconds
-        const nextShowTime = Math.random() * (3000 - 1000) + 1000;
-        setTimeout(showHearts, nextShowTime);
-    }
+            // Function to show hearts
+            function showHearts() {
+                // Generate a random number of hearts between 9 and 15
+                const numberOfHearts =
+                    Math.floor(Math.random() * (15 - 9 + 1)) + 9
 
-    // Start showing hearts
-    showHearts();
-</script>
+                for (let i = 0; i < numberOfHearts; i++) {
+                    const heart = createHeart()
+                    randomPosition(heart)
 
-</body>
+                    // Make the heart visible
+                    heart.style.opacity = 1
+
+                    // Random lifetime for each heart between 1 to 3 seconds
+                    const randomTime = Math.random() * (3000 - 1000) + 1000
+
+                    // Remove the heart after randomTime
+                    setTimeout(() => {
+                        heart.style.opacity = 0
+                        setTimeout(() => heart.remove(), 500) // Remove the heart after it fades out
+                    }, randomTime)
+                }
+
+                // Show hearts again after a random time between 1 to 3 seconds
+                const nextShowTime = Math.random() * (3000 - 1000) + 1000
+                setTimeout(showHearts, nextShowTime)
+            }
+
+            // Start showing hearts
+            showHearts()
+        </script>
+    </body>
 </html>
