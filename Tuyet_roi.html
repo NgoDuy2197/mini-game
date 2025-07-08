@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tuyết rơi có gió mượt + nền tuỳ chỉnh</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #f9f9f9;
+
+      /* 🖼️ CHÈN ẢNH NỀN TẠI ĐÂY */
+      /* Ví dụ: nền mùa đông */
+      background-image: url('https://images.unsplash.com/photo-1608889177083-54e2f2b78c28?auto=format&fit=crop&w=1470&q=80');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    .snowflake {
+      position: fixed;
+      top: -10px;
+      color: white;
+      font-size: 14px;
+      user-select: none;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.8;
+      will-change: transform;
+      text-shadow: 0 0 2px #000;
+    }
+  </style>
+</head>
+<body>
+
+<script>
+  const snowflakeChars = ['❄️', '❅', '❆'];
+
+  let windOffset = 0;
+  let targetWindOffset = 0;
+  let windChangeSpeed = 0.5; // tốc độ thay đổi gió (pixels mỗi frame)
+
+  function lerp(a, b, t) {
+    return a + (b - a) * t;
+  }
+
+  function createSnowflake() {
+    const snowflake = document.createElement('div');
+    snowflake.classList.add('snowflake');
+    snowflake.innerText = snowflakeChars[Math.floor(Math.random() * snowflakeChars.length)];
+
+    const size = Math.random() * 10 + 10;
+    const startLeft = Math.random() * window.innerWidth;
+    const fallDuration = Math.random() * 5 + 5;
+    const swayAmplitude = Math.random() * 30 + 20;
+    const swayFrequency = Math.random() * 0.5 + 0.5;
+
+    snowflake.style.left = `${startLeft}px`;
+    snowflake.style.fontSize = `${size}px`;
+
+    document.body.appendChild(snowflake);
+
+    let startTime = null;
+
+    function animateFrame(time) {
+      if (!startTime) startTime = time;
+      const elapsed = (time - startTime) / 1000;
+      const progress = elapsed / fallDuration;
+
+      if (progress >= 1) {
+        snowflake.remove();
+        return;
+      }
+
+      // Gió thay đổi từ từ
+      windOffset = lerp(windOffset, targetWindOffset, 0.01 * windChangeSpeed);
+
+      const x = swayAmplitude * Math.sin(swayFrequency * elapsed * 2 * Math.PI) + windOffset;
+      const y = progress * window.innerHeight;
+
+      snowflake.style.transform = `translate(${x}px, ${y}px)`;
+      requestAnimationFrame(animateFrame);
+    }
+
+    requestAnimationFrame(animateFrame);
+  }
+
+  // Tạo tuyết liên tục
+  setInterval(createSnowflake, 150);
+
+  // Đổi gió ngẫu nhiên theo thời gian
+  function changeWindTarget() {
+    // Tạo gió mới từ -40 → +40 px
+    targetWindOffset = Math.floor(Math.random() * 80 - 40);
+    // Ngẫu nhiên tốc độ gió thổi (mượt hay mạnh): 0.3 → 1.2
+    windChangeSpeed = Math.random() * 0.9 + 0.3;
+
+    // Lặp lại sau 5–10 giây
+    setTimeout(changeWindTarget, Math.random() * 5000 + 5000);
+  }
+
+  changeWindTarget();
+</script>
+
+</body>
+</html>
