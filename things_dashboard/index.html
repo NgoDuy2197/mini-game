@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Thông Tin Tổng Hợp</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-chart-line"></i> Dashboard Thông Tin Tổng Hợp</h1>
+            <div class="header-info">
+                <span id="current-time"></span>
+                <span id="current-date"></span>
+            </div>
+        </header>
+
+        <div class="dashboard-grid" id="dashboard-grid">
+            <!-- Weather Widget -->
+            <div class="widget weather-widget" data-widget="weather">
+                <div class="widget-header">
+                    <h3><i class="fas fa-cloud-sun"></i> Thời Tiết</h3>
+                    <div class="widget-controls">
+                        <button class="location-btn" onclick="updateLocationForAllWidgets()" title="Cập nhật vị trí">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </button>
+                        <button class="refresh-btn" onclick="refreshWidget('weather')">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="widget-content" id="weather-content">
+                    <div class="weather-search-form">
+                        <input type="text" id="weather-city-input" placeholder="Nhập tên thành phố (VD: Hanoi, Tokyo, London)..." class="weather-city-input">
+                        <button class="weather-search-btn" onclick="searchWeatherByCity()">Tìm kiếm</button>
+                    </div>
+                    <div class="loading">Đang tải...</div>
+                </div>
+            </div>
+
+            <!-- News Widget -->
+            <div class="widget news-widget" data-widget="news">
+                <div class="widget-header">
+                    <h3><i class="fas fa-newspaper"></i> Tin Tức</h3>
+                    <div class="widget-controls">
+                        <button class="location-btn" onclick="updateLocationForAllWidgets()" title="Cập nhật vị trí">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </button>
+                        <button class="refresh-btn" onclick="refreshWidget('news')">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="widget-content" id="news-content">
+                    <div class="loading">Đang tải...</div>
+                </div>
+            </div>
+
+            <!-- Geo Widget -->
+            <div class="widget geo-widget" data-widget="geo">
+                <div class="widget-header">
+                    <h3><i class="fas fa-map-marker-alt"></i> Địa Lý</h3>
+                    <div class="widget-controls">
+                        <button class="location-btn" onclick="updateLocationForAllWidgets()" title="Cập nhật vị trí">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </button>
+                        <button class="refresh-btn" onclick="refreshWidget('geo')">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="widget-content" id="geo-content">
+                    <div class="geo-search-form">
+                        <select id="geo-city-select" class="geo-city-select">
+                            <option value="">Chọn thành phố...</option>
+                        </select>
+                        <button class="geo-search-btn" onclick="searchGeoByCity()">Tìm kiếm</button>
+                    </div>
+                    <div class="loading">Đang tải...</div>
+                </div>
+            </div>
+
+            <!-- Dictionary Widget -->
+            <div class="widget dictionary-widget" data-widget="dictionary">
+                <div class="widget-header">
+                    <h3><i class="fas fa-book"></i> Từ Điển</h3>
+                    <div class="widget-controls">
+                        <button class="refresh-btn" onclick="refreshWidget('dictionary')">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="widget-content" id="dictionary-content">
+                    <div class="dictionary-form">
+                        <input type="text" id="word-input" placeholder="Nhập từ cần tra cứu..." class="word-input">
+                        <button class="search-btn" onclick="searchWord()">Tìm kiếm</button>
+                    </div>
+                    <div id="dictionary-result" class="dictionary-result"></div>
+                </div>
+            </div>
+
+            <!-- Translation Widget -->
+            <div class="widget translation-widget" data-widget="translation">
+                <div class="widget-header">
+                    <h3><i class="fas fa-language"></i> Dịch Thuật</h3>
+                    <div class="widget-controls">
+                        <button class="refresh-btn" onclick="refreshWidget('translation')">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="widget-content" id="translation-content">
+                    <div class="translation-form">
+                        <select id="from-lang" class="lang-select">
+                            <option value="vi">Tiếng Việt</option>
+                            <option value="en">English</option>
+                            <option value="fr">Français</option>
+                            <option value="de">Deutsch</option>
+                            <option value="ja">日本語</option>
+                            <option value="ko">한국어</option>
+                            <option value="zh">中文</option>
+                        </select>
+                        <button class="swap-btn" onclick="swapLanguages()">
+                            <i class="fas fa-exchange-alt"></i>
+                        </button>
+                        <select id="to-lang" class="lang-select">
+                            <option value="en">English</option>
+                            <option value="vi">Tiếng Việt</option>
+                            <option value="fr">Français</option>
+                            <option value="de">Deutsch</option>
+                            <option value="ja">日本語</option>
+                            <option value="ko">한국어</option>
+                            <option value="zh">中文</option>
+                        </select>
+                    </div>
+                    <textarea id="translate-input" placeholder="Nhập văn bản cần dịch..." rows="3"></textarea>
+                    <button class="translate-btn" onclick="translateText()">Dịch</button>
+                    <button class="test-btn" onclick="testTranslation()" style="margin-left: 10px; background: #6b7280; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">Test API</button>
+                    <div id="translate-result" class="translate-result"></div>
+                </div>
+            </div>
+
+            <!-- Currency Widget -->
+            <div class="widget currency-widget" data-widget="currency">
+                <div class="widget-header">
+                    <h3><i class="fas fa-dollar-sign"></i> Tỷ Giá</h3>
+                    <div class="widget-controls">
+                        <button class="refresh-btn" onclick="refreshWidget('currency')">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="widget-content" id="currency-content">
+                    <div class="loading">Đang tải...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
