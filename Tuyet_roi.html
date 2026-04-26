@@ -6,13 +6,15 @@
   <title>Tuyết rơi có gió mượt + nền tuỳ chỉnh</title>
   <style>
     body {
-      margin: 0;
       overflow: hidden;
-      background: #f9f9f9;
+      background: #000;
+      height: 100vh;
+      margin: 0;
+      padding: 0;
 
       /* 🖼️ CHÈN ẢNH NỀN TẠI ĐÂY */
       /* Ví dụ: nền mùa đông */
-      background-image: url('https://images.unsplash.com/photo-1608889177083-54e2f2b78c28?auto=format&fit=crop&w=1470&q=80');
+      background-image: url('https://www.josephfiler.com/images/xl/Canada-Rockies-3613-Edit-Edit.jpg');
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
@@ -91,8 +93,8 @@
 
   // Đổi gió ngẫu nhiên theo thời gian
   function changeWindTarget() {
-    // Tạo gió mới từ -40 → +40 px
-    targetWindOffset = Math.floor(Math.random() * 80 - 40);
+    // Tạo gió mới từ -80 → +80 px
+    targetWindOffset = Math.floor(Math.random() * 160 - 80);
     // Ngẫu nhiên tốc độ gió thổi (mượt hay mạnh): 0.3 → 1.2
     windChangeSpeed = Math.random() * 0.9 + 0.3;
 
