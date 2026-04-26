@@ -165,8 +165,8 @@ const hitImgSrc = null;      // Hit/explosion effect - Replace with your effect 
 const powerUpImgSrc = null;  // Star power-up - Replace with your power-up GIF
 // =================================================================
 
-// Image sources - using static PNG images for better compatibility
-const playerImgSrc = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+// Image sources - using PNG for player (more reliable than GIF)
+const playerImgSrc = "https://static.vecteezy.com/system/resources/thumbnails/051/554/908/small/retro-rocket-primed-for-launch-png.png" // Rocket PNG
 
     const playerSize = 60;
     const enemySize = 40;
@@ -192,7 +192,9 @@ const playerImgSrc = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYA
     let gameRunning = false;
     let mouseX = canvas.width / 2;
     let lastShotTime = 0;
-    let fireRate = 200; // milliseconds between shots
+    let fireRate = 120; // milliseconds between shots (increased fire rate)
+    let autoFire = false; // Auto-fire toggle state
+    let autoMove = false; // Auto-movement toggle state
     let currentPowerUp = null;
     let powerUpEndTime = 0;
     let enemySpawnRate = 0.02;
@@ -204,18 +206,18 @@ const playerImgSrc = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYA
 // EXAMPLE: const backgroundImages = ["https://example.com/forest.jpg", "https://example.com/ocean.jpg"];
 const backgroundImages = []; // Add your image URLs here
 
-// Fallback gradient colors (used when no background images provided)
+// Fallback gradient colors (used when no background images provided) - Darker tones for better enemy visibility
 let backgroundColors = [
-        { start: '#FFB6F0', end: '#FFC0F0' }, // Cotton candy pink
-        { start: '#B6E5FF', end: '#C0F0FF' }, // Baby blue
-        { start: '#FFFF99', end: '#FFFFCC' }, // Sunny yellow
-        { start: '#FFB6B6', end: '#FFC0C0' }, // Soft red
-        { start: '#B6FFB6', end: '#C0FFC0' }, // Mint green
-        { start: '#E6B6FF', end: '#F0C0FF' }, // Purple dream
-        { start: '#FFD9B6', end: '#FFE4C0' }, // Peach orange
-        { start: '#B6FFFF', end: '#C0FFFF' }, // Cyan sky
-        { start: '#FFFFB6', end: '#FFFFC0' }, // Lemon yellow
-        { start: '#FFB6E6', end: '#FFC0F0' }  // Rose pink
+        { start: '#1a1a2e', end: '#16213e' }, // Dark navy
+        { start: '#0f3460', end: '#16213e' }, // Deep ocean
+        { start: '#2d1b69', end: '#0f3460' }, // Dark purple
+        { start: '#1e3a5f', end: '#2d1b69' }, // Midnight blue
+        { start: '#16213e', end: '#0f3460' }, // Dark space
+        { start: '#0d1b2a', end: '#1b263b' }, // Dark charcoal
+        { start: '#1b263b', end: '#2d1b69' }, // Dark violet
+        { start: '#0f0f1e', end: '#1a1a2e' }, // Dark void
+        { start: '#16213e', end: '#1e3a5f' }, // Dark steel
+        { start: '#1a1a2e', end: '#0d1b2a' }  // Dark abyss
     ];
 let currentColorIndex = 0;
 let backgroundTransitionTime = 0;
@@ -259,7 +261,7 @@ let useBackgroundImages = backgroundImages.length > 0;
         oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
         oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.1);
         
-        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
         
         oscillator.start(audioContext.currentTime);
@@ -279,7 +281,7 @@ let useBackgroundImages = backgroundImages.length > 0;
         oscillator.frequency.setValueAtTime(300, audioContext.currentTime);
         oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.2);
         
-        gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
+        gainNode.gain.setValueAtTime(0.7, audioContext.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
         
         oscillator.start(audioContext.currentTime);
@@ -381,8 +383,57 @@ let useBackgroundImages = backgroundImages.length > 0;
         }
     }
 
-    // We're using drawn graphics instead of images for better performance and compatibility
-    const playerImg = null;
+    // Player sprite animation system
+    const playerSprites = [];
+    let playerAnimationFrame = 0;
+    let playerAnimationTime = 0;
+    let playerAnimationSpeed = 100; // milliseconds per frame
+    let playerImgLoaded = false;
+
+    // Create animated player using CSS sprite approach
+    function createAnimatedPlayer() {
+        console.log('Loading player image from:', playerImgSrc);
+        const img = new Image();
+        // Try without crossOrigin first to see if that helps
+        // img.crossOrigin = "anonymous";
+        
+        img.onload = function() {
+            console.log('Player image loaded successfully, dimensions:', img.width, 'x', img.height);
+            
+            // Create canvas to extract frames
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            // Set canvas size to match GIF
+            tempCanvas.width = img.width;
+            tempCanvas.height = img.height;
+            
+            // For now, we'll use the image as-is with animation effects
+            playerSprites.push(img);
+            playerImgLoaded = true;
+            console.log('Player GIF loaded successfully, total sprites:', playerSprites.length);
+        };
+        
+        img.onerror = function(error) {
+            console.error('Failed to load player GIF, error:', error);
+            console.error('Image URL that failed:', playerImgSrc);
+            playerImgLoaded = false;
+        };
+        
+        img.src = playerImgSrc;
+    }
+
+    // Initialize player animation
+    createAnimatedPlayer();
+    
+    // Force image loading check after a delay
+    setTimeout(() => {
+        console.log('Forced check - imgLoaded:', playerImgLoaded, 'sprites:', playerSprites.length);
+        if (!playerImgLoaded) {
+            console.log('Image still not loaded, retrying...');
+            createAnimatedPlayer();
+        }
+    }, 2000);
     const enemy1Img = null;
     const enemy2Img = null;
     const enemy3Img = null;
@@ -447,15 +498,37 @@ let useBackgroundImages = backgroundImages.length > 0;
 
     // Generate enemies randomly from all 5 types
     function createEnemy() {
-        // Get all enemy type keys
-        const allTypes = Object.keys(enemyTypes);
+        // 5% chance to spawn a boss enemy
+        const isBoss = Math.random() < 0.05;
         
-        // Random selection from all 5 enemy types
-        const randomType = allTypes[Math.floor(Math.random() * allTypes.length)];
-        const enemyConfig = enemyTypes[randomType];
+        let enemyConfig;
+        let randomType;
         
-        // 30% chance for horizontal flyer
-        const isHorizontalFlyer = Math.random() < 0.3;
+        if (isBoss) {
+            // Boss enemy - pick a random type and enhance it
+            const allTypes = Object.keys(enemyTypes);
+            randomType = allTypes[Math.floor(Math.random() * allTypes.length)];
+            enemyConfig = enemyTypes[randomType];
+            
+            // Create boss version with enhanced stats
+            enemyConfig = {
+                ...enemyConfig,
+                width: enemyConfig.width * 2,  // Double size
+                height: enemyConfig.height * 2, // Double size
+                health: enemyConfig.health * 5,  // 5x health
+                points: enemyConfig.points * 10, // 10x points
+                color: '#FF0000', // Boss color (red)
+                name: 'BOSS ' + enemyConfig.name
+            };
+        } else {
+            // Regular enemy
+            const allTypes = Object.keys(enemyTypes);
+            randomType = allTypes[Math.floor(Math.random() * allTypes.length)];
+            enemyConfig = enemyTypes[randomType];
+        }
+        
+        // 30% chance for horizontal flyer (but not for bosses)
+        const isHorizontalFlyer = !isBoss && Math.random() < 0.3;
         
         let enemy = {
             width: enemyConfig.width,
@@ -468,6 +541,7 @@ let useBackgroundImages = backgroundImages.length > 0;
             name: enemyConfig.name,
             color: enemyConfig.color,
             alive: true,
+            isBoss: isBoss, // Boss flag
             wobble: Math.random() * Math.PI * 2, // Random starting wobble phase
             wobbleSpeed: 0.05 + Math.random() * 0.03, // Random wobble speed
             wobbleAmount: 10 + Math.random() * 10, // Random wobble amount (10-20px)
@@ -483,7 +557,7 @@ let useBackgroundImages = backgroundImages.length > 0;
             targetPauseY: canvas.height * 0.3 + Math.random() * canvas.height * 0.2, // Random pause height between 30-50% of screen
             sleepCount: 0,
             maxSleepCount: 2, // Maximum 2 sleeps per enemy
-            shape: Math.random() < 0.5 ? 'round' : 'square' // Randomly choose shape
+            shape: ['round', 'square', 'rectangle', 'diamond'][Math.floor(Math.random() * 4)] // Randomly choose from 4 shapes
         };
         
         if (isHorizontalFlyer) {
@@ -551,6 +625,88 @@ let useBackgroundImages = backgroundImages.length > 0;
         }
     }
 
+    // Create firework explosion effect with random patterns
+    function createFireworkExplosion(x, y, baseColor, isBoss = false) {
+        const particleCount = isBoss ? 60 : 30; // More particles for bosses
+        const colors = [
+            '#FF0000', '#FF4500', '#FFA500', '#FFFF00', '#00FF00', 
+            '#00FFFF', '#0000FF', '#4B0082', '#FF1493', '#FF69B4', '#FFD700'
+        ];
+        
+        // Random explosion pattern
+        const patterns = ['circle', 'star', 'heart', 'spiral', 'random'];
+        const pattern = patterns[Math.floor(Math.random() * patterns.length)];
+        
+        for (let i = 0; i < particleCount; i++) {
+            let angle, velocity;
+            
+            switch(pattern) {
+                case 'circle':
+                    angle = (Math.PI * 2 * i) / particleCount;
+                    velocity = isBoss ? 6 + Math.random() * 8 : 3 + Math.random() * 5;
+                    break;
+                case 'star':
+                    angle = (Math.PI * 2 * i) / particleCount;
+                    velocity = (i % 2 === 0) ? 
+                        (isBoss ? 10 + Math.random() * 4 : 5 + Math.random() * 3) : 
+                        (isBoss ? 4 + Math.random() * 3 : 2 + Math.random() * 2);
+                    break;
+                case 'heart':
+                    const heartAngle = (Math.PI * 2 * i) / particleCount;
+                    angle = heartAngle + Math.sin(heartAngle * 2) * 0.3;
+                    velocity = isBoss ? 5 + Math.random() * 6 : 3 + Math.random() * 4;
+                    break;
+                case 'spiral':
+                    angle = (Math.PI * 2 * i) / particleCount + (i * 0.1);
+                    velocity = isBoss ? 4 + Math.random() * 8 + (i * 0.1) : 2 + Math.random() * 4 + (i * 0.05);
+                    break;
+                default: // random
+                    angle = Math.random() * Math.PI * 2;
+                    velocity = isBoss ? 2 + Math.random() * 10 : 1 + Math.random() * 6;
+            }
+            
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            
+            particles.push({
+                x: x,
+                y: y,
+                vx: Math.cos(angle) * velocity,
+                vy: Math.sin(angle) * velocity,
+                size: isBoss ? Math.random() * 7 + 2 : Math.random() * 5 + 1,
+                color: color,
+                life: 2.5, // Even longer life
+                isFirework: true,
+                gravity: 0.08,
+                sparkle: Math.random() < 0.3 // 30% chance for sparkle effect
+            });
+        }
+        
+        // Add multiple secondary explosions for cascade effect
+        setTimeout(() => {
+            for (let j = 0; j < 2; j++) {
+                setTimeout(() => {
+                    for (let i = 0; i < particleCount / 3; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const velocity = 1 + Math.random() * 3;
+                        const color = colors[Math.floor(Math.random() * colors.length)];
+                        
+                        particles.push({
+                            x: x + (Math.random() - 0.5) * 30,
+                            y: y + (Math.random() - 0.5) * 30,
+                            vx: Math.cos(angle) * velocity,
+                            vy: Math.sin(angle) * velocity,
+                            size: Math.random() * 3 + 1,
+                            color: color,
+                            life: 1.8,
+                            isFirework: true,
+                            gravity: 0.04
+                        });
+                    }
+                }, j * 50);
+            }
+        }, 100);
+    }
+
     // Mouse movement handler
     function handleMouseMove(e) {
         const rect = canvas.getBoundingClientRect();
@@ -560,9 +716,6 @@ let useBackgroundImages = backgroundImages.length > 0;
         
         // Keep player within bounds
         player.targetX = Math.max(0, Math.min(canvas.width - player.width, player.targetX));
-        
-        // Check for enemy hover
-        checkEnemyHover(mouseX, mouseY);
     }
 
     // Mouse click handler
@@ -599,33 +752,53 @@ let useBackgroundImages = backgroundImages.length > 0;
         }
     }
 
-    // Check enemy hover to display info
-    function checkEnemyHover(mouseX, mouseY) {
-        let hoveredEnemy = null;
-        
-        enemies.forEach(enemy => {
-            if (enemy.alive &&
-                mouseX >= enemy.x && 
-                mouseX <= enemy.x + enemy.width &&
-                mouseY >= enemy.y && 
-                mouseY <= enemy.y + enemy.height) {
-                hoveredEnemy = enemy;
-            }
-        });
-        
+    // Update enemy info display with closest enemy information
+    function updateEnemyInfo() {
         const enemyInfoDiv = document.getElementById('enemyInfo');
         const enemyDetailsDiv = document.getElementById('enemyDetails');
         
-        if (hoveredEnemy) {
-            const enemyConfig = enemyTypes[hoveredEnemy.type];
+        if (enemies.length === 0 || !gameRunning) {
+            enemyInfoDiv.style.display = 'none';
+            return;
+        }
+        
+        // Find the closest enemy to the player
+        let closestEnemy = null;
+        let closestDistance = Infinity;
+        
+        enemies.forEach(enemy => {
+            if (enemy.alive) {
+                const distance = Math.sqrt(
+                    Math.pow(enemy.x + enemy.width/2 - (player.x + player.width/2), 2) +
+                    Math.pow(enemy.y + enemy.height/2 - (player.y + player.height/2), 2)
+                );
+                
+                if (distance < closestDistance) {
+                    closestDistance = distance;
+                    closestEnemy = enemy;
+                }
+            }
+        });
+        
+        if (closestEnemy) {
+            const enemyConfig = enemyTypes[closestEnemy.type];
+            const distanceText = closestDistance < 200 ? 
+                `Distance: ${Math.round(closestDistance)}m` : 
+                `Distance: ${Math.round(closestDistance)}m`;
+            
             enemyDetailsDiv.innerHTML = `
-                <div><strong>${enemyConfig.name}</strong></div>
+                <div><strong>${enemyConfig.name}</strong> ${closestEnemy.isBoss ? '👑' : ''}</div>
                 <div>${enemyConfig.description}</div>
-                <div>Health: ${hoveredEnemy.health}/${hoveredEnemy.maxHealth}</div>
+                <div>Health: ${closestEnemy.health}/${closestEnemy.maxHealth}</div>
                 <div>Speed: ${enemyConfig.speed.toFixed(1)}</div>
                 <div>Points: ${enemyConfig.points}</div>
+                <div>${distanceText}</div>
             `;
+            
+            // Always show but make it more transparent
             enemyInfoDiv.style.display = 'block';
+            enemyInfoDiv.style.background = 'rgba(0, 0, 0, 0.3)'; // More transparent
+            enemyInfoDiv.style.backdropFilter = 'blur(5px)'; // Add blur effect
         } else {
             enemyInfoDiv.style.display = 'none';
         }
@@ -633,6 +806,34 @@ let useBackgroundImages = backgroundImages.length > 0;
 
     // Update player position smoothly
     function updatePlayer() {
+        // Auto-movement logic
+        if (autoMove) {
+            // Move towards nearest enemy
+            if (enemies.length > 0) {
+                let closestEnemy = null;
+                let closestDistance = Infinity;
+                
+                enemies.forEach(enemy => {
+                    if (enemy.alive) {
+                        const distance = Math.sqrt(
+                            Math.pow(enemy.x + enemy.width/2 - (player.x + player.width/2), 2) +
+                            Math.pow(enemy.y + enemy.height/2 - (player.y + player.height/2), 2)
+                        );
+                        
+                        if (distance < closestDistance) {
+                            closestDistance = distance;
+                            closestEnemy = enemy;
+                        }
+                    }
+                });
+                
+                if (closestEnemy) {
+                    // Move towards the center of the closest enemy
+                    player.targetX = closestEnemy.x + closestEnemy.width/2 - player.width/2;
+                }
+            }
+        }
+        
         const dx = player.targetX - player.x;
         player.x += dx * 0.15; // Smooth movement
         
@@ -743,6 +944,12 @@ let useBackgroundImages = backgroundImages.length > 0;
         updatePowerUps();
         updateParticles();
         updateUI();
+        updateEnemyInfo();
+
+        // Auto-fire functionality
+        if (autoFire && gameRunning) {
+            fireBullet();
+        }
 
         // Draw and update bullets
         bullets = bullets.filter(bullet => bullet.y > -10);
@@ -769,19 +976,50 @@ let useBackgroundImages = backgroundImages.length > 0;
                 // Update wobble for visual effect
                 enemy.wobble += enemy.wobbleSpeed;
                 
+                // Apply knockback if active
+                if (enemy.isKnockedBack) {
+                    enemy.x += enemy.knockbackX;
+                    enemy.y += enemy.knockbackY;
+                    enemy.knockbackX *= enemy.knockbackDecay;
+                    enemy.knockbackY *= enemy.knockbackDecay;
+                    
+                    // Stop knockback when minimal
+                    if (Math.abs(enemy.knockbackX) < 0.5 && Math.abs(enemy.knockbackY) < 0.5) {
+                        enemy.isKnockedBack = false;
+                        enemy.knockbackX = 0;
+                        enemy.knockbackY = 0;
+                    }
+                }
+                
                 if (enemy.isHorizontalFlyer) {
                     // Horizontal movement with vertical wave
-                    enemy.x += enemy.speed * enemy.horizontalDirection;
+                    if (!enemy.isKnockedBack) {
+                        enemy.x += enemy.speed * enemy.horizontalDirection;
+                    }
                     enemy.verticalOffset = Math.sin(Date.now() * enemy.verticalSpeed) * enemy.verticalAmplitude;
                     
-                    // Remove if off screen
-                    if ((enemy.horizontalDirection > 0 && enemy.x > canvas.width) ||
-                        (enemy.horizontalDirection < 0 && enemy.x < -enemy.width)) {
+                    // Die when 30px outside screen boundaries
+                    if ((enemy.horizontalDirection > 0 && enemy.x > canvas.width + 30) ||
+                        (enemy.horizontalDirection < 0 && enemy.x < -enemy.width - 30)) {
+                        // Enemy dies when 30px outside screen
+                        enemy.alive = false;
+                        score += enemy.points;
+                        enemiesKilled++;
+                        createFireworkExplosion(enemy.x + enemy.width/2, enemy.y + enemy.height/2, enemy.color, enemy.isBoss);
                         return false;
+                    }
+                    
+                    // Bounce back when hitting screen edges (before 30px buffer)
+                    if (enemy.horizontalDirection > 0 && enemy.x > canvas.width - enemy.width) {
+                        enemy.x = canvas.width - enemy.width;
+                        enemy.horizontalDirection = -1; // Reverse direction
+                    } else if (enemy.horizontalDirection < 0 && enemy.x < 0) {
+                        enemy.x = 0;
+                        enemy.horizontalDirection = 1; // Reverse direction
                     }
                 } else {
                     // Regular downward movement with pause behavior
-                    if (!enemy.isPaused) {
+                    if (!enemy.isPaused && !enemy.isKnockedBack) {
                         enemy.y += enemy.speed;
                         
                         // Check if enemy reached pause height and hasn't exceeded max sleep count
@@ -807,6 +1045,23 @@ let useBackgroundImages = backgroundImages.length > 0;
                         health -= 10;
                         createParticles(enemy.x + enemy.width/2, canvas.height, '#FF0000', 5);
                         return false;
+                    }
+                    
+                    // Die when 30px outside screen boundaries
+                    if (enemy.x < -enemy.width - 30 || enemy.x > canvas.width + 30) {
+                        // Enemy dies when 30px outside screen
+                        enemy.alive = false;
+                        score += enemy.points;
+                        enemiesKilled++;
+                        createFireworkExplosion(enemy.x + enemy.width/2, enemy.y + enemy.height/2, enemy.color, enemy.isBoss);
+                        return false;
+                    }
+                    
+                    // Bounce back when hitting screen edges (before 30px buffer)
+                    if (enemy.x < 0) {
+                        enemy.x = 0;
+                    } else if (enemy.x > canvas.width - enemy.width) {
+                        enemy.x = canvas.width - enemy.width;
                     }
                 }
                 
@@ -834,7 +1089,7 @@ let useBackgroundImages = backgroundImages.length > 0;
                     ctx.beginPath();
                     ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
                     ctx.fill();
-                } else {
+                } else if (enemy.shape === 'square') {
                     // Square enemy with rounded corners
                     const cornerRadius = 8; // Rounded corner radius
                     
@@ -848,6 +1103,22 @@ let useBackgroundImages = backgroundImages.length > 0;
                     ctx.quadraticCurveTo(drawX, drawY + bodyHeight, drawX, drawY + bodyHeight - cornerRadius);
                     ctx.lineTo(drawX, drawY + cornerRadius);
                     ctx.quadraticCurveTo(drawX, drawY, drawX + cornerRadius, drawY);
+                    ctx.closePath();
+                    ctx.fill();
+                } else if (enemy.shape === 'rectangle') {
+                    // Rectangle enemy (wider than tall)
+                    ctx.fillRect(drawX, drawY, bodyWidth * 1.3, bodyHeight * 0.7);
+                } else if (enemy.shape === 'diamond') {
+                    // Diamond enemy (rotated square)
+                    const centerX = drawX + enemy.width / 2;
+                    const centerY = drawY + enemy.height / 2;
+                    const size = Math.min(enemy.width, enemy.height) / 2 * breathe;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(centerX, centerY - size);
+                    ctx.lineTo(centerX + size, centerY);
+                    ctx.lineTo(centerX, centerY + size);
+                    ctx.lineTo(centerX - size, centerY);
                     ctx.closePath();
                     ctx.fill();
                 }
@@ -892,17 +1163,23 @@ let useBackgroundImages = backgroundImages.length > 0;
                 ctx.fill();
                 ctx.restore();
                 
-                // Enemy eyes based on type
+                // Enemy eyes based on type - bigger and circular
                 ctx.fillStyle = '#FF0000';
                 if (enemy.type === 'mosquito') {
-                    // Mosquito has multiple small eyes
+                    // Mosquito has multiple small circular eyes
                     for (let i = 0; i < 3; i++) {
-                        ctx.fillRect(drawX + enemy.width * 0.3 + i * 4, drawY + enemy.height * 0.2, 2, 2);
+                        ctx.beginPath();
+                        ctx.arc(drawX + enemy.width * 0.3 + i * 6, drawY + enemy.height * 0.2, 3, 0, Math.PI * 2);
+                        ctx.fill();
                     }
                 } else {
-                    // Other enemies have two eyes
-                    ctx.fillRect(drawX + enemy.width * 0.2, drawY + enemy.height * 0.2, 4, 4);
-                    ctx.fillRect(drawX + enemy.width * 0.7, drawY + enemy.height * 0.2, 4, 4);
+                    // Other enemies have two big circular eyes
+                    ctx.beginPath();
+                    ctx.arc(drawX + enemy.width * 0.25, drawY + enemy.height * 0.25, 6, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(drawX + enemy.width * 0.75, drawY + enemy.height * 0.25, 6, 0, Math.PI * 2);
+                    ctx.fill();
                 }
                 
                 // Add stinger for wasp
@@ -911,17 +1188,26 @@ let useBackgroundImages = backgroundImages.length > 0;
                     ctx.fillRect(drawX + enemy.width/2 - 1, drawY + enemy.height, 2, 5);
                 }
                 
-                // Show sleeping Z's when enemy is paused
+                // Show sleeping Z's when enemy is paused with size animation
                 if (enemy.isPaused) {
                     ctx.fillStyle = '#4169E1';
-                    ctx.font = 'bold 16px Arial';
                     const sleepTime = (Date.now() - enemy.pauseStartTime) / 1000;
                     const zCount = Math.min(3, Math.floor(sleepTime / 0.5) + 1);
                     let zText = '';
                     for (let i = 0; i < zCount; i++) {
                         zText += 'Z';
                     }
+                    
+                    // Animate font size from small to large
+                    const animProgress = (sleepTime % 1) / 1; // 0 to 1 animation cycle
+                    const fontSize = 12 + Math.sin(animProgress * Math.PI) * 8; // 12px to 20px
+                    ctx.font = `bold ${fontSize}px Arial`;
+                    
+                    // Add fade effect based on animation
+                    ctx.globalAlpha = 0.6 + Math.sin(animProgress * Math.PI) * 0.4;
+                    
                     ctx.fillText(zText, drawX + enemy.width + 5, drawY - 5);
+                    ctx.globalAlpha = 1; // Reset alpha
                 }
                 
                 if (enemy.health < enemy.maxHealth) {
@@ -1023,133 +1309,56 @@ let useBackgroundImages = backgroundImages.length > 0;
         // Apply recoil offset
         const drawY = player.y + playerJumpY + playerRecoilY;
         
-        // Cute player body with rounded corners and pulsing effect
-        const pulse = Math.sin(time * 3) * 0.05 + 1;
-        const cornerRadius = 15; // Rounded corners for cuteness
-        const bodyWidth = player.width * pulse;
-        const bodyHeight = player.height * pulse;
-        
-        // Draw rounded body
-        ctx.fillStyle = '#32CD32'; // Lime green for child-friendly look
-        ctx.beginPath();
-        ctx.moveTo(player.x + cornerRadius, drawY);
-        ctx.lineTo(player.x + bodyWidth - cornerRadius, drawY);
-        ctx.quadraticCurveTo(player.x + bodyWidth, drawY, player.x + bodyWidth, drawY + cornerRadius);
-        ctx.lineTo(player.x + bodyWidth, drawY + bodyHeight - cornerRadius);
-        ctx.quadraticCurveTo(player.x + bodyWidth, drawY + bodyHeight, player.x + bodyWidth - cornerRadius, drawY + bodyHeight);
-        ctx.lineTo(player.x + cornerRadius, drawY + bodyHeight);
-        ctx.quadraticCurveTo(player.x, drawY + bodyHeight, player.x, drawY + bodyHeight - cornerRadius);
-        ctx.lineTo(player.x, drawY + cornerRadius);
-        ctx.quadraticCurveTo(player.x, drawY, player.x + cornerRadius, drawY);
-        ctx.closePath();
-        ctx.fill();
-        
-        // Cute big eyes
-        ctx.fillStyle = '#FFF';
-        const eyeY = drawY + player.height * 0.25;
-        const eyeSize = 12; // Bigger eyes for cuteness
-        const eyeSpacing = player.width * 0.25;
-        
-        // Left eye
-        ctx.beginPath();
-        ctx.arc(player.x + eyeSpacing, eyeY, eyeSize, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Right eye
-        ctx.beginPath();
-        ctx.arc(player.x + player.width - eyeSpacing, eyeY, eyeSize, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Cute sparkling pupils
-        ctx.fillStyle = '#000';
-        const pupilOffset = Math.sin(time * 2) * 1;
-        const pupilSize = 6;
-        
-        // Left pupil
-        ctx.beginPath();
-        ctx.arc(player.x + eyeSpacing + pupilOffset, eyeY, pupilSize, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Right pupil
-        ctx.beginPath();
-        ctx.arc(player.x + player.width - eyeSpacing + pupilOffset, eyeY, pupilSize, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Eye sparkles
-        ctx.fillStyle = '#FFF';
-        ctx.beginPath();
-        ctx.arc(player.x + eyeSpacing + pupilOffset - 2, eyeY - 2, 2, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(player.x + player.width - eyeSpacing + pupilOffset - 2, eyeY - 2, 2, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Cute smile
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(player.x + player.width/2, drawY + player.height * 0.5, player.width * 0.2, 0.2 * Math.PI, 0.8 * Math.PI);
-        ctx.stroke();
-        
-        // Blushing cheeks
-        ctx.fillStyle = 'rgba(255, 192, 203, 0.6)'; // Light pink
-        ctx.beginPath();
-        ctx.arc(player.x + player.width * 0.15, drawY + player.height * 0.6, 8, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(player.x + player.width * 0.85, drawY + player.height * 0.6, 8, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Cute animated gun
-        ctx.fillStyle = '#333';
-        const gunRecoil = currentPowerUp ? Math.sin(time * 10) * 2 : 0;
-        const gunWidth = 8;
-        const gunHeight = 25;
-        const gunX = player.x + player.width/2 - gunWidth/2;
-        const gunY = drawY - 20 + gunRecoil;
-        
-        // Rounded gun
-        ctx.beginPath();
-        ctx.moveTo(gunX + 2, gunY);
-        ctx.lineTo(gunX + gunWidth - 2, gunY);
-        ctx.quadraticCurveTo(gunX + gunWidth, gunY, gunX + gunWidth, gunY + 2);
-        ctx.lineTo(gunX + gunWidth, gunY + gunHeight - 2);
-        ctx.quadraticCurveTo(gunX + gunWidth, gunY + gunHeight, gunX + gunWidth - 2, gunY + gunHeight);
-        ctx.lineTo(gunX + 2, gunY + gunHeight);
-        ctx.quadraticCurveTo(gunX, gunY + gunHeight, gunX, gunY + gunHeight - 2);
-        ctx.lineTo(gunX, gunY + 2);
-        ctx.quadraticCurveTo(gunX, gunY, gunX + 2, gunY);
-        ctx.closePath();
-        ctx.fill();
-        
-        // Gun barrel with rounded corners and glow effect when shooting
-        if (Date.now() - lastShotTime < 100) {
-            ctx.shadowBlur = 20;
-            ctx.shadowColor = '#FFFF00';
-            ctx.fillStyle = '#FFFF00';
+        // Draw animated player sprite
+        // console.log('Drawing player - imgLoaded:', playerImgLoaded, 'sprites:', playerSprites.length);
+        if (playerImgLoaded && playerSprites.length > 0) {
+            // Update animation frame
+            const currentTime = Date.now();
+            if (currentTime - playerAnimationTime > playerAnimationSpeed) {
+                playerAnimationFrame = (playerAnimationFrame + 1) % playerSprites.length;
+                playerAnimationTime = currentTime;
+            }
             
-            // Rounded gun barrel tip
-            const barrelWidth = 6;
-            const barrelHeight = 10;
-            const barrelX = gunX + gunWidth/2 - barrelWidth/2;
-            const barrelY = gunY - 5;
-            const barrelRadius = 3;
+            // Draw with animation effects
+            const animationScale = 1 + Math.sin(time * 8) * 0.08; // Enhanced breathing
+            const animationRotation = Math.sin(time * 4) * 0.03; // Enhanced rotation
+            const bobOffset = Math.sin(time * 6) * 3; // Bobbing motion
             
-            ctx.beginPath();
-            ctx.moveTo(barrelX + barrelRadius, barrelY);
-            ctx.lineTo(barrelX + barrelWidth - barrelRadius, barrelY);
-            ctx.quadraticCurveTo(barrelX + barrelWidth, barrelY, barrelX + barrelWidth, barrelY + barrelRadius);
-            ctx.lineTo(barrelX + barrelWidth, barrelY + barrelHeight - barrelRadius);
-            ctx.quadraticCurveTo(barrelX + barrelWidth, barrelY + barrelHeight, barrelX + barrelWidth - barrelRadius, barrelY + barrelHeight);
-            ctx.lineTo(barrelX + barrelRadius, barrelY + barrelHeight);
-            ctx.quadraticCurveTo(barrelX, barrelY + barrelHeight, barrelX, barrelY + barrelHeight - barrelRadius);
-            ctx.lineTo(barrelX, barrelY + barrelRadius);
-            ctx.quadraticCurveTo(barrelX, barrelY, barrelX + barrelRadius, barrelY);
-            ctx.closePath();
-            ctx.fill();
-            ctx.shadowBlur = 0;
+            ctx.save();
+            ctx.translate(player.x + player.width/2, drawY + player.height/2 + bobOffset);
+            ctx.rotate(animationRotation);
+            ctx.scale(animationScale, animationScale);
+            
+            // Draw the current sprite frame
+            const currentSprite = playerSprites[playerAnimationFrame];
+            ctx.drawImage(currentSprite, -player.width/2, -player.height/2, player.width, player.height);
+            
+            ctx.restore();
+        } else {
+            // Enhanced fallback animation
+            const pulse = Math.sin(time * 6) * 0.15 + 1;
+            const rotation = Math.sin(time * 3) * 0.1;
+            
+            ctx.save();
+            ctx.translate(player.x + player.width/2, drawY + player.height/2);
+            ctx.rotate(rotation);
+            ctx.scale(pulse, pulse);
+            
+            // Draw animated rectangle with gradient
+            const gradient = ctx.createLinearGradient(-player.width/2, -player.height/2, player.width/2, player.height/2);
+            gradient.addColorStop(0, '#32CD32');
+            gradient.addColorStop(1, '#228B22');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(-player.width/2, -player.height/2, player.width, player.height);
+            
+            // Add simple animation details
+            ctx.fillStyle = '#FFF';
+            ctx.fillRect(-5, -5, 10, 10); // Simple "eye"
+            
+            ctx.restore();
         }
         
+                
         // Draw shield if active
         if (currentPowerUp === 'shield') {
             ctx.strokeStyle = 'rgba(0, 255, 255, 0.5)';
@@ -1200,6 +1409,34 @@ let useBackgroundImages = backgroundImages.length > 0;
         document.addEventListener('keydown', (e) => {
             if (e.key === ' ' && gameRunning) {
                 fireBullet();
+            } else if (e.key === '1' && gameRunning) {
+                // Toggle auto-fire mode
+                autoFire = !autoFire;
+                console.log('Auto-fire:', autoFire ? 'ON' : 'OFF');
+                
+                // Show indicator for auto-fire status
+                const indicator = document.getElementById('powerUpIndicator');
+                if (autoFire) {
+                    indicator.textContent = 'Auto-Fire ON!';
+                    indicator.style.display = 'block';
+                    indicator.style.color = '#00FF00';
+                } else {
+                    indicator.style.display = 'none';
+                }
+            } else if (e.key === '2' && gameRunning) {
+                // Toggle auto-movement mode
+                autoMove = !autoMove;
+                console.log('Auto-movement:', autoMove ? 'ON' : 'OFF');
+                
+                // Show indicator for auto-movement status
+                const indicator = document.getElementById('powerUpIndicator');
+                if (autoMove) {
+                    indicator.textContent = 'Auto-Move ON!';
+                    indicator.style.display = 'block';
+                    indicator.style.color = '#00FFFF';
+                } else if (!autoFire) {
+                    indicator.style.display = 'none';
+                }
             }
         });
     }
@@ -1298,8 +1535,16 @@ let useBackgroundImages = backgroundImages.length > 0;
         particles = particles.filter(particle => {
             particle.x += particle.vx;
             particle.y += particle.vy;
-            particle.vy += 0.2; // gravity
-            particle.life -= 0.02;
+            
+            // Apply gravity if particle has gravity property
+            if (particle.gravity) {
+                particle.vy += particle.gravity;
+            } else {
+                particle.vy += 0.2; // default gravity
+            }
+            
+            // Slower life decay for firework particles
+            particle.life -= particle.isFirework ? 0.01 : 0.02;
             particle.size *= 0.98;
             return particle.life > 0;
         });
@@ -1321,6 +1566,28 @@ let useBackgroundImages = backgroundImages.length > 0;
                 if (enemy.alive && isColliding(bullet, enemy)) {
                     enemy.health -= bullet.damage || 1;
                     
+                    // Add knockback effect with random direction
+                    const directions = ['left', 'up', 'right'];
+                    const randomDirection = directions[Math.floor(Math.random() * directions.length)];
+                    
+                    switch(randomDirection) {
+                        case 'left':
+                            enemy.knockbackX = -30;
+                            enemy.knockbackY = -10;
+                            break;
+                        case 'up':
+                            enemy.knockbackX = -5;
+                            enemy.knockbackY = -25;
+                            break;
+                        case 'right':
+                            enemy.knockbackX = 30;
+                            enemy.knockbackY = -10;
+                            break;
+                    }
+                    
+                    enemy.isKnockedBack = true;
+                    enemy.knockbackDecay = 0.85; // Knockback decay factor
+                    
                     if (enemy.health <= 0) {
                         enemy.alive = false;
                         score += enemy.points;
@@ -1332,12 +1599,52 @@ let useBackgroundImages = backgroundImages.length > 0;
                         // Add health reward based on enemy's max health
                         const healthReward = enemy.maxHealth * 10; // 10 health points per enemy health point
                         health = Math.min(1000, health + healthReward); // Cap at 1000 max health
-                        createParticles(enemy.x + enemy.width/2, enemy.y + enemy.height/2, '#00FF00', 10); // Green particles for health
                         
-                        createParticles(enemy.x + enemy.width/2, enemy.y + enemy.height/2, enemy.color, 15);
+                        // Create firework explosion effect
+                        createFireworkExplosion(enemy.x + enemy.width/2, enemy.y + enemy.height/2, enemy.color, enemy.isBoss);
+                        
                         createPowerUp(enemy.x + enemy.width/2, enemy.y + enemy.height/2);
                     } else {
-                        createParticles(bullet.x, bullet.y, '#FFFF00', 3);
+                        // Splash effect when hit - creates water-like splash pattern
+                        const splashColors = ['#FFFF00', '#FFA500', '#FF6347', '#FFD700'];
+                        
+                        // Create splash ring effect
+                        for (let ring = 0; ring < 3; ring++) {
+                            setTimeout(() => {
+                                for (let i = 0; i < 12; i++) {
+                                    const angle = (Math.PI * 2 * i) / 12;
+                                    const velocity = 2 + ring * 1.5 + Math.random() * 2;
+                                    const color = splashColors[Math.floor(Math.random() * splashColors.length)];
+                                    
+                                    particles.push({
+                                        x: bullet.x,
+                                        y: bullet.y,
+                                        vx: Math.cos(angle) * velocity,
+                                        vy: Math.sin(angle) * velocity - 1, // Slight upward bias
+                                        size: Math.random() * 4 + 2 - ring * 0.5,
+                                        color: color,
+                                        life: 1.2 - ring * 0.2,
+                                        gravity: 0.08,
+                                        isSplash: true
+                                    });
+                                }
+                            }, ring * 50);
+                        }
+                        
+                        // Add center impact particles
+                        for (let i = 0; i < 5; i++) {
+                            particles.push({
+                                x: bullet.x,
+                                y: bullet.y,
+                                vx: (Math.random() - 0.5) * 4,
+                                vy: (Math.random() - 0.5) * 4 - 2,
+                                size: Math.random() * 3 + 2,
+                                color: '#FFFFFF',
+                                life: 0.8,
+                                gravity: 0.1,
+                                isSplash: true
+                            });
+                        }
                     }
                     
                     bullets.splice(bulletIndex, 1);

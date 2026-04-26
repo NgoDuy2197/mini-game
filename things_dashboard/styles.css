@@ -479,6 +479,46 @@ body {
     box-shadow: 0 8px 20px rgba(240, 147, 251, 0.3);
 }
 
+/* Read/Unread news indicators */
+.news-unread {
+    border-left: 4px solid #4CAF50;
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.05), rgba(240, 147, 251, 0.05));
+}
+
+.news-read {
+    border-left: 4px solid #888;
+    background: linear-gradient(135deg, rgba(136, 136, 136, 0.05), rgba(240, 147, 251, 0.05));
+    opacity: 0.8;
+}
+
+.news-read .news-title {
+    font-weight: 500;
+    color: #666;
+}
+
+.news-unread .news-title {
+    font-weight: 600;
+    color: #333;
+}
+
+.read-indicator {
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-left: auto;
+    font-weight: 500;
+}
+
+.news-unread .read-indicator {
+    background: #4CAF50;
+    color: white;
+}
+
+.news-read .read-indicator {
+    background: #888;
+    color: white;
+}
+
 .news-image {
     width: 80px;
     height: 80px;

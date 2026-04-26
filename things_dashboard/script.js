@@ -5,6 +5,77 @@ let currentDefinition = null; // Store current definition for translation
 let translatedDefinition = null; // Store translated definition
 let currentTheme = null; // Store current theme
 
+// Read news tracking system
+const READ_NEWS_KEY = 'dashboard_read_news';
+let readNewsTitles = new Set();
+
+// Initialize read news from localStorage
+function initializeReadNews() {
+    try {
+        const stored = localStorage.getItem(READ_NEWS_KEY);
+        if (stored) {
+            const data = JSON.parse(stored);
+            // Clear old entries (older than 24 hours)
+            const now = Date.now();
+            const oneDayAgo = now - (24 * 60 * 60 * 1000);
+            
+            Object.keys(data).forEach(title => {
+                if (data[title] > oneDayAgo) {
+                    readNewsTitles.add(title);
+                }
+            });
+            
+            // Save cleaned data
+            saveReadNews();
+        }
+    } catch (error) {
+        console.error('Error loading read news:', error);
+        readNewsTitles.clear();
+    }
+}
+
+// Mark news as read
+function markNewsAsRead(title) {
+    readNewsTitles.add(title);
+    saveReadNews();
+}
+
+// Check if news is read
+function isNewsRead(title) {
+    return readNewsTitles.has(title);
+}
+
+// Save read news to localStorage
+function saveReadNews() {
+    try {
+        const data = {};
+        readNewsTitles.forEach(title => {
+            data[title] = Date.now();
+        });
+        localStorage.setItem(READ_NEWS_KEY, JSON.stringify(data));
+    } catch (error) {
+        console.error('Error saving read news:', error);
+    }
+}
+
+// Clean old read news (older than 24 hours)
+function cleanOldReadNews() {
+    const now = Date.now();
+    const oneDayAgo = now - (24 * 60 * 60 * 1000);
+    let hasChanges = false;
+    
+    readNewsTitles.forEach(title => {
+        // This is a simplified approach - in reality we'd need to store timestamps
+        // For now, we'll clean the entire set daily
+        hasChanges = true;
+    });
+    
+    if (hasChanges) {
+        readNewsTitles.clear();
+        saveReadNews();
+    }
+}
+
 // Theme System
 const themes = ['default', 'theme-lavender', 'theme-coral', 'theme-mint', 'theme-aurora', 'theme-cherry', 'theme-sunset', 'theme-arctic', 'theme-ocean', 'theme-forest'];
 
@@ -59,22 +130,52 @@ function switchTheme() {
 
 // RSS Feed Parser
 async function fetchRSSFeed(feedUrl) {
+    const startTime = Date.now();
+    console.log(`[RSS] Starting fetch for: ${feedUrl}`);
+    
     try {
         // Use CORS proxy for RSS feed
         const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(feedUrl)}`;
+        console.log(`[RSS] Proxy URL: ${proxyUrl}`);
+        
+        console.log(`[RSS] Sending fetch request...`);
+        const fetchStartTime = Date.now();
         const response = await fetch(proxyUrl);
+        const fetchEndTime = Date.now();
+        console.log(`[RSS] Fetch completed in ${fetchEndTime - fetchStartTime}ms`);
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         
+        console.log(`[RSS] Parsing JSON response...`);
+        const parseStartTime = Date.now();
         const data = await response.json();
+        const parseEndTime = Date.now();
+        console.log(`[RSS] JSON parsed in ${parseEndTime - parseStartTime}ms`);
+        
+        console.log(`[RSS] Creating DOM parser...`);
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(data.contents, "text/xml");
         
-        return parseRSSFeed(xmlDoc);
+        console.log(`[RSS] Parsing RSS feed items...`);
+        const itemsStartTime = Date.now();
+        const result = parseRSSFeed(xmlDoc);
+        const itemsEndTime = Date.now();
+        console.log(`[RSS] RSS items parsed in ${itemsEndTime - itemsStartTime}ms, found ${result.length} items`);
+        
+        const totalTime = Date.now() - startTime;
+        console.log(`[RSS] Total fetch time for ${feedUrl}: ${totalTime}ms`);
+        
+        return result;
     } catch (error) {
-        console.error('Error fetching RSS feed:', error);
+        const totalTime = Date.now() - startTime;
+        console.error(`[RSS] Error fetching RSS feed after ${totalTime}ms:`, error);
+        console.error(`[RSS] Error details:`, {
+            feedUrl: feedUrl,
+            error: error.message,
+            stack: error.stack
+        });
         return [];
     }
 }
@@ -185,6 +286,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Initialize dashboard
 async function initializeDashboard() {
     initializeTheme(); // Initialize random theme
+    initializeReadNews(); // Initialize read news tracking
     await getUserLocation();
     loadAllWidgets();
 }
@@ -479,20 +581,29 @@ async function loadNewsData() {
         const newsList = document.getElementById('news-list');
         
         // Process RSS feeds sequentially
+        const totalStartTime = Date.now();
+        console.log(`[NEWS] Starting to load ${vnexpressFeeds.length} RSS feeds...`);
+        
         for (let i = 0; i < vnexpressFeeds.length; i++) {
             const feed = vnexpressFeeds[i];
+            const feedStartTime = Date.now();
+            console.log(`[NEWS] Starting feed ${i + 1}/${vnexpressFeeds.length}: ${feed.category} (${feed.url})`);
+            
             try {
-                console.log(`Fetching from ${feed.category} (${i + 1}/${vnexpressFeeds.length})...`);
-                
                 // Update loading status
                 const header = content.querySelector('.news-header small');
                 if (header) {
-                    header.textContent = `Đang tải từ ${i + 1}/${vnexpressFeeds.length} chuyên mục...`;
+                    header.textContent = `Đang tải từ ${i + 1}/${vnexpressFeeds.length} chuyên mục... (${feed.url})`;
                 }
                 
+                console.log(`[NEWS] Calling fetchRSSFeed for ${feed.category}...`);
+                const fetchStartTime = Date.now();
                 const newsItems = await fetchRSSFeed(feed.url);
+                const fetchEndTime = Date.now();
+                console.log(`[NEWS] fetchRSSFeed completed in ${fetchEndTime - fetchStartTime}ms, got ${newsItems.length} items`);
                 
-                // Filter out duplicates by title and add category information
+                console.log(`[NEWS] Filtering duplicates for ${feed.category}...`);
+                const filterStartTime = Date.now();
                 const newItems = newsItems.filter(item => !processedTitles.has(item.title))
                     .map(item => {
                         processedTitles.add(item.title); // Mark title as processed
@@ -502,9 +613,15 @@ async function loadNewsData() {
                             source: `VnExpress - ${feed.category}`
                         };
                     });
+                const filterEndTime = Date.now();
+                console.log(`[NEWS] Filtering completed in ${filterEndTime - filterStartTime}ms, ${newItems.length} new items`);
                 
                 // Add new items to the main array
                 allNewsItems.push(...newItems);
+                
+                const feedEndTime = Date.now();
+                const feedTotalTime = feedEndTime - feedStartTime;
+                console.log(`[NEWS] Feed ${feed.category} completed in ${feedTotalTime}ms total`);
                 
                 // Filter for today's news and sort
                 const today = new Date();
@@ -549,14 +666,18 @@ async function loadNewsData() {
             }
         }
         
+        const totalEndTime = Date.now();
+        const totalLoadTime = totalEndTime - totalStartTime;
+        console.log(`[NEWS] All RSS feeds completed in ${totalLoadTime}ms total`);
+        console.log(`[NEWS] Total items collected: ${allNewsItems.length}`);
         console.log(`allNewsItems.length: ${allNewsItems.length}`)
         
-        // Filter for today's news
+        // Filter for today's news and exclude read news
         const today = new Date();
         today.setHours(0, 0, 0, 0); // Start of today
         const todayNews = allNewsItems.filter(item => {
             const newsDate = new Date(item.pubDate);
-            return newsDate >= today;
+            return newsDate >= today && !isNewsRead(item.title);
         });
         
         // Sort by publication date (newest first)
@@ -564,7 +685,10 @@ async function loadNewsData() {
         
         if (todayNews.length > 0) {
             const newsHtml = todayNews.map(item => `
-                <div class="news-item" onclick="window.open('${item.link}', '_blank')">
+                <div class="news-item ${isNewsRead(item.title) ? 'news-read' : 'news-unread'}" 
+                     onclick="window.open('${item.link}', '_blank')" 
+                     onmouseenter="markNewsAsRead('${item.title.replace(/'/g, "\\'")}')"
+                     data-title="${item.title.replace(/"/g, '&quot;')}">
                     <div class="news-image">
                         ${item.image ? `<img src="${item.image}" alt="${item.title}">` : '<i class="fas fa-newspaper"></i>'}
                     </div>
@@ -574,6 +698,7 @@ async function loadNewsData() {
                         <div class="news-meta">
                             <span class="news-source">${item.source}</span>
                             <span class="news-time">${formatNewsDate(item.pubDate)}</span>
+                            <span class="read-indicator">${isNewsRead(item.title) ? '✓ Đã đọc' : '• Mới'}</span>
                         </div>
                     </div>
                 </div>
