@@ -3,6 +3,158 @@ let userLocation = { lat: 21.0325, lon: 105.8497 }; // Default to Hanoi, Vietnam
 let currentTime = null;
 let currentDefinition = null; // Store current definition for translation
 let translatedDefinition = null; // Store translated definition
+let currentTheme = null; // Store current theme
+
+// Theme System
+const themes = ['default', 'theme-lavender', 'theme-coral', 'theme-mint', 'theme-aurora', 'theme-cherry', 'theme-sunset', 'theme-arctic', 'theme-ocean', 'theme-forest'];
+
+// Initialize random theme on page load
+function initializeTheme() {
+    const randomTheme = themes[Math.floor(Math.random() * themes.length)];
+    setTheme(randomTheme);
+}
+
+function setTheme(themeName) {
+    // Remove all theme classes
+    themes.forEach(theme => {
+        document.body.classList.remove(theme);
+    });
+    
+    // Add new theme class if not default
+    if (themeName !== 'default') {
+        document.body.classList.add(themeName);
+    }
+    
+    currentTheme = themeName;
+    console.log(`Theme changed to: ${themeName}`);
+}
+
+function switchTheme() {
+    // Find current theme index
+    let currentIndex = themes.indexOf(currentTheme);
+    if (currentIndex === -1) currentIndex = 0; // Default to first theme if not found
+    
+    // Move to next theme
+    let nextIndex = (currentIndex + 1) % themes.length;
+    let nextTheme = themes[nextIndex];
+    
+    setTheme(nextTheme);
+    
+    // Show notification
+    const themeNames = {
+        'default': 'Sunset Vibes',
+        'theme-lavender': 'Lavender Dreams',
+        'theme-coral': 'Coral Sunset',
+        'theme-mint': 'Mint Fresh',
+        'theme-aurora': 'Aurora Borealis',
+        'theme-cherry': 'Cherry Blossom',
+        'theme-sunset': 'Golden Hour',
+        'theme-arctic': 'Arctic Ice',
+        'theme-ocean': 'Ocean Dreams', 
+        'theme-forest': 'Forest Mist'
+    };
+    
+    showProgressNotification(`Chủ đề đã đổi thành: ${themeNames[nextTheme]}`, 'success');
+}
+
+// RSS Feed Parser
+async function fetchRSSFeed(feedUrl) {
+    try {
+        // Use CORS proxy for RSS feed
+        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(feedUrl)}`;
+        const response = await fetch(proxyUrl);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(data.contents, "text/xml");
+        
+        return parseRSSFeed(xmlDoc);
+    } catch (error) {
+        console.error('Error fetching RSS feed:', error);
+        return [];
+    }
+}
+
+function parseRSSFeed(xmlDoc) {
+    const items = xmlDoc.getElementsByTagName('item');
+    const newsItems = [];
+    
+    for (let i = 0; i < Math.min(items.length); i++) {
+        const item = items[i];
+        const title = item.getElementsByTagName('title')[0]?.textContent || '';
+        const description = item.getElementsByTagName('description')[0]?.textContent || '';
+        const link = item.getElementsByTagName('link')[0]?.textContent || '';
+        const pubDate = item.getElementsByTagName('pubDate')[0]?.textContent || '';
+        const enclosure = item.getElementsByTagName('enclosure')[0];
+        
+        // Extract image from description CDATA
+        let image = '';
+        if (enclosure && enclosure.getAttribute('type')?.startsWith('image/')) {
+            image = enclosure.getAttribute('url') || '';
+        } else if (description) {
+            // Extract image from CDATA description
+            const imgMatch = description.match(/<img[^>]+src="([^"]+)"/);
+            if (imgMatch) {
+                image = imgMatch[1];
+            }
+        }
+        
+        // Clean description text
+        let cleanDescription = description
+            .replace(/<[^>]*>/g, '') // Remove HTML tags
+            .replace(/&nbsp;/g, ' ') // Replace &nbsp; with space
+            .replace(/&amp;/g, '&') // Replace HTML entities
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, "'")
+            .trim();
+        
+        // Limit description length
+        if (cleanDescription.length > 150) {
+            cleanDescription = cleanDescription.substring(0, 150) + '...';
+        }
+        
+        newsItems.push({
+            title: title.trim(),
+            description: cleanDescription,
+            link: link.trim(),
+            pubDate: pubDate.trim(),
+            image: image.trim(),
+            source: 'VnExpress'
+        });
+    }
+    
+    return newsItems;
+}
+
+function formatNewsDate(pubDate) {
+    try {
+        const date = new Date(pubDate);
+        const now = new Date();
+        const diffTime = Math.abs(now - date);
+        const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+        
+        if (diffHours < 1) {
+            return 'Vừa xong';
+        } else if (diffHours < 24) {
+            return `${diffHours} giờ trước`;
+        } else {
+            const diffDays = Math.floor(diffHours / 24);
+            if (diffDays < 7) {
+                return `${diffDays} ngày trước`;
+            } else {
+                return date.toLocaleDateString('vi-VN');
+            }
+        }
+    } catch (error) {
+        return pubDate;
+    }
+}
 
 // Predefined cities with coordinates for weather and geography search
 const cityList = [
@@ -32,6 +184,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Initialize dashboard
 async function initializeDashboard() {
+    initializeTheme(); // Initialize random theme
     await getUserLocation();
     loadAllWidgets();
 }
@@ -283,90 +436,194 @@ async function loadWeatherData() {
         };
         displayWeatherData(demoWeather, 'Demo Data');
     }
-}
+} // Added closing brace here
 
-// News API - Sử dụng 2 API được cung cấp
+// News RSS Feeds - Multiple VnExpress Categories
+const vnexpressFeeds = [
+    { url: 'https://vnexpress.net/rss/the-gioi.rss', category: 'Thế giới' },
+    { url: 'https://vnexpress.net/rss/thoi-su.rss', category: 'Thời sự' },
+    { url: 'https://vnexpress.net/rss/kinh-doanh.rss', category: 'Kinh doanh' },
+    { url: 'https://vnexpress.net/rss/giai-tri.rss', category: 'Giải trí' },
+    { url: 'https://vnexpress.net/rss/the-thao.rss', category: 'Thể thao' },
+    { url: 'https://vnexpress.net/rss/phap-luat.rss', category: 'Pháp luật' },
+    { url: 'https://vnexpress.net/rss/giao-duc.rss', category: 'Giáo dục' },
+    { url: 'https://vnexpress.net/rss/goc-nhin.rss', category: 'Góc nhìn' },
+    { url: 'https://vnexpress.net/rss/bat-dong-san.rss', category: 'Bất động sản' },
+    { url: 'https://vnexpress.net/rss/tin-moi-nhat.rss', category: 'Tin mới nhất' },
+    { url: 'https://vnexpress.net/rss/tin-noi-bat.rss', category: 'Tin nổi bật' },
+    { url: 'https://vnexpress.net/rss/suc-khoe.rss', category: 'Sức khỏe' }
+];
+
+let allNewsItems = [];
+let processedTitles = new Set(); // Track processed titles for deduplication
+let newsUpdateInterval;
+
 async function loadNewsData() {
     const content = document.getElementById('news-content');
-    content.innerHTML = '<div class="loading">Đang tải...</div>';
+    content.innerHTML = '<div class="loading">Đang tải tin tức từ nhiều nguồn...</div>';
 
     try {
-        console.log('Loading news data...');
+        console.log('Loading RSS news data from multiple feeds sequentially...');
+        allNewsItems = [];
+        processedTitles.clear(); // Clear previous titles
+
+        // Initialize display container
+        content.innerHTML = `
+            <div class="news-header">
+                <h3>Tin tức hôm nay - VnExpress</h3>
+                <small style="color: #888;">Đang tải từ 0/${vnexpressFeeds.length} chuyên mục...</small>
+            </div>
+            <div class="news-list" id="news-list">
+            </div>
+        `;
+        const newsList = document.getElementById('news-list');
         
-        // Sử dụng 2 API được cung cấp
-        const newsApis = [
-            // NewsAPI.org với API key được cung cấp
-            'https://newsapi.org/v2/top-headlines?country=vn&apiKey=cf0549de53f14760ad68ee7c44a44a49&pageSize=10',
-            // Mediastack API với access key được cung cấp
-            'http://api.mediastack.com/v1/news?access_key=913a387d5c167075f0c12fa815148db3&countries=vn&limit=10'
-        ];
-
-        let newsData = null;
-        let apiUsed = '';
-
-        for (const apiUrl of newsApis) {
+        // Process RSS feeds sequentially
+        for (let i = 0; i < vnexpressFeeds.length; i++) {
+            const feed = vnexpressFeeds[i];
             try {
-                console.log('Trying news API:', apiUrl.split('?')[0]);
-                const response = await fetch(apiUrl);
+                console.log(`Fetching from ${feed.category} (${i + 1}/${vnexpressFeeds.length})...`);
                 
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('News API response:', data);
-                    
-                    // Handle different API response formats
-                    if (data.articles && data.articles.length > 0) {
-                        // NewsAPI.org format
-                        newsData = data.articles.map(article => ({
-                            title: article.title,
-                            description: article.description,
-                            url: article.url,
-                            publishedAt: article.publishedAt
-                        }));
-                        apiUsed = 'NewsAPI.org';
-                        break;
-                    } else if (data.data && data.data.length > 0) {
-                        // Mediastack format
-                        newsData = data.data.map(article => ({
-                            title: article.title,
-                            description: article.description,
-                            url: article.url,
-                            publishedAt: article.published_at
-                        }));
-                        apiUsed = 'Mediastack';
-                        break;
-                    }
+                // Update loading status
+                const header = content.querySelector('.news-header small');
+                if (header) {
+                    header.textContent = `Đang tải từ ${i + 1}/${vnexpressFeeds.length} chuyên mục...`;
                 }
+                
+                const newsItems = await fetchRSSFeed(feed.url);
+                
+                // Filter out duplicates by title and add category information
+                const newItems = newsItems.filter(item => !processedTitles.has(item.title))
+                    .map(item => {
+                        processedTitles.add(item.title); // Mark title as processed
+                        return {
+                            ...item,
+                            category: feed.category,
+                            source: `VnExpress - ${feed.category}`
+                        };
+                    });
+                
+                // Add new items to the main array
+                allNewsItems.push(...newItems);
+                
+                // Filter for today's news and sort
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const todayNews = allNewsItems.filter(item => {
+                    const newsDate = new Date(item.pubDate);
+                    return newsDate >= today;
+                });
+                
+                // Sort by publication date (newest first)
+                todayNews.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+                
+                // Update display with current items
+                const newsHtml = todayNews.map(item => `
+                    <div class="news-item" onclick="window.open('${item.link}', '_blank')">
+                        <div class="news-image">
+                            ${item.image ? `<img src="${item.image}" alt="${item.title}">` : '<i class="fas fa-newspaper"></i>'}
+                        </div>
+                        <div class="news-content">
+                            <h4 class="news-title">${item.title}</h4>
+                            <p class="news-description">${item.description}</p>
+                            <div class="news-meta">
+                                <span class="news-source">${item.source}</span>
+                                <span class="news-time">${formatNewsDate(item.pubDate)}</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                
+                newsList.innerHTML = newsHtml;
+                
+                // Update header with current status
+                if (header) {
+                    header.textContent = `Nguồn: ${todayNews.length} tin từ ${i + 1}/${vnexpressFeeds.length} chuyên mục`;
+                }
+                
+                console.log(`Added ${newItems.length} new items from ${feed.category} (filtered ${newsItems.length - newItems.length} duplicates)`);
+                
             } catch (error) {
-                console.log('News API failed:', apiUrl.split('?')[0], error.message);
-                continue;
+                console.log(`Failed to fetch from ${feed.category}:`, error.message);
+                // Continue to next feed even if this one fails
             }
         }
-
-        if (newsData && newsData.length > 0) {
-            const newsHtml = newsData.map(article => `
-                <div class="news-item" onclick="window.open('${article.url || '#'}', '_blank')" style="cursor: pointer;">
-                    <h4>${article.title || 'Không có tiêu đề'}</h4>
-                    <p>${article.description || 'Không có mô tả'}</p>
-                    <small>${article.publishedAt ? new Date(article.publishedAt).toLocaleDateString('vi-VN') : ''}</small>
+        
+        console.log(`allNewsItems.length: ${allNewsItems.length}`)
+        
+        // Filter for today's news
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Start of today
+        const todayNews = allNewsItems.filter(item => {
+            const newsDate = new Date(item.pubDate);
+            return newsDate >= today;
+        });
+        
+        // Sort by publication date (newest first)
+        todayNews.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+        
+        if (todayNews.length > 0) {
+            const newsHtml = todayNews.map(item => `
+                <div class="news-item" onclick="window.open('${item.link}', '_blank')">
+                    <div class="news-image">
+                        ${item.image ? `<img src="${item.image}" alt="${item.title}">` : '<i class="fas fa-newspaper"></i>'}
+                    </div>
+                    <div class="news-content">
+                        <h4 class="news-title">${item.title}</h4>
+                        <p class="news-description">${item.description}</p>
+                        <div class="news-meta">
+                            <span class="news-source">${item.source}</span>
+                            <span class="news-time">${formatNewsDate(item.pubDate)}</span>
+                        </div>
+                    </div>
                 </div>
             `).join('');
             
             content.innerHTML = `
                 <div class="news-header">
-                    <h3>Tin tức Hoa Kỳ</h3>
-                    <small style="color: #888;">Nguồn: ${apiUsed}</small>
+                    <h3>Tin tức hôm nay - VnExpress</h3>
+                    <small style="color: #888;">Nguồn: ${todayNews.length} tin từ ${vnexpressFeeds.length} chuyên mục</small>
                 </div>
                 <div class="news-list">
                     ${newsHtml}
                 </div>
             `;
-            console.log('News widget updated successfully using', apiUsed);
+            console.log('RSS News widget updated successfully');
+            
+            // Start dynamic updates every 5 minutes
+            startNewsUpdates();
         } else {
-            throw new Error('Không tìm thấy tin tức');
+            // Show all news if no today's news found
+            const allNewsHtml = allNewsItems.slice(0, 10).map(item => `
+                <div class="news-item" onclick="window.open('${item.link}', '_blank')" style="display: flex; flex-direction: row;">
+                    <div class="news-image" style="margin-right: 10px;">
+                        ${item.image ? `<img src="${item.image}" alt="${item.title}">` : '<i class="fas fa-newspaper"></i>'}
+                    </div>
+                    <div class="news-content">
+                        <h4 class="news-title">${item.title}</h4>
+                        <p class="news-description">${item.description}</p>
+                        <div class="news-meta">
+                            <span class="news-source">${item.source}</span>
+                            <span class="news-time">${new Date(item.pubDate).toLocaleDateString('vi-VN')}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            content.innerHTML = `
+                <div class="news-header">
+                    <h3>Tin tức mới nhất - VnExpress</h3>
+                    <small style="color: #888;">Không có tin hôm nay, hiển thị tin mới nhất</small>
+                </div>
+                <div class="news-list">
+                    ${allNewsHtml}
+                </div>
+            `;
+            console.log('No today news found, showing latest news');
         }
     } catch (error) {
-        console.error('News API error:', error);
-        // Enhanced fallback with demo news data
+        console.error('RSS News error:', error);
+        // Fallback with demo news data
         const demoNews = [
             {
                 title: 'Tin tức mẫu 1',
@@ -376,65 +633,25 @@ async function loadNewsData() {
             },
             {
                 title: 'Tin tức mẫu 2',
-                description: 'Tin tức mẫu thứ hai với nội dung khác.',
+                description: 'Tin tức mẫu thứ hai với cập nhật.',
                 url: '#',
                 publishedAt: new Date().toISOString()
             },
-            {
-                title: 'Tin tức mẫu 3',
-                description: 'Tin tức mẫu thứ ba để đảm bảo hiển thị đủ.',
-                url: '#',
-                publishedAt: new Date().toISOString()
-            },
-            {
-                title: 'Tin tức mẫu 4',
-                description: 'Tin tức mẫu thứ tư với thông tin bổ sung.',
-                url: '#',
-                publishedAt: new Date().toISOString()
-            },
-            {
-                title: 'Tin tức mẫu 5',
-                description: 'Tin tức mẫu thứ năm để hoàn thiện danh sách.',
-                url: '#',
-                publishedAt: new Date().toISOString()
-            },
-            {
-                title: 'Tin tức mẫu 6',
-                description: 'Tin tức mẫu cuối cùng trong danh sách.',
-                url: '#',
-                publishedAt: new Date().toISOString()
-            },
-            {
-                title: 'Tin tức mẫu 7',
-                description: 'Tin tức mẫu thứ bảy với thông tin mới.',
-                url: '#',
-                publishedAt: new Date().toISOString()
-            },
-            {
-                title: 'Tin tức mẫu 8',
-                description: 'Tin tức mẫu thứ tám với cập nhật.',
-                url: '#',
-                publishedAt: new Date().toISOString()
-            },
-            {
-                title: 'Tin tức mẫu 9',
-                description: 'Tin tức mẫu thứ chín với thông tin chi tiết.',
-                url: '#',
-                publishedAt: new Date().toISOString()
-            },
-            {
-                title: 'Tin tức mẫu 10',
-                description: 'Tin tức mẫu thứ mười để hoàn thiện danh sách 10 tin.',
-                url: '#',
-                publishedAt: new Date().toISOString()
-            }
         ];
         
         const newsHtml = demoNews.map(article => `
-            <div class="news-item" onclick="window.open('${article.url}', '_blank')" style="cursor: pointer;">
-                <h4>${article.title}</h4>
-                <p>${article.description}</p>
-                <small>${new Date(article.publishedAt).toLocaleDateString('vi-VN')}</small>
+            <div class="news-item" onclick="window.open('${article.url}', '_blank')" style="display: flex; flex-direction: row;">
+                <div class="news-image" style="margin-right: 10px;">
+                    <i class="fas fa-newspaper"></i>
+                </div>
+                <div class="news-content">
+                    <h4 class="news-title">${article.title}</h4>
+                    <p class="news-description">${article.description}</p>
+                    <div class="news-meta">
+                        <span class="news-source">Demo</span>
+                        <span class="news-time">${new Date(article.publishedAt).toLocaleDateString('vi-VN')}</span>
+                    </div>
+                </div>
             </div>
         `).join('');
         
@@ -1542,3 +1759,108 @@ document.addEventListener('DOMContentLoaded', function() {
         testBtn.style.display = 'inline-block';
     }
 }); 
+
+// Dynamic news update function
+function startNewsUpdates() {
+    // Clear existing interval if any
+    if (newsUpdateInterval) {
+        clearInterval(newsUpdateInterval);
+    }
+    
+    // Set up automatic updates every 5 minutes
+    newsUpdateInterval = setInterval(async () => {
+        console.log('Checking for news updates...');
+        
+        // Create temporary set for tracking new titles in this update
+        const newTitlesInUpdate = new Set();
+        let newItemsFound = [];
+        
+        // Process RSS feeds sequentially for updates
+        for (const feed of vnexpressFeeds) {
+            try {
+                console.log(`Checking updates from ${feed.category}...`);
+                const newsItems = await fetchRSSFeed(feed.url);
+                
+                // Filter for truly new items (not in processedTitles)
+                const newItems = newsItems.filter(item => 
+                    !processedTitles.has(item.title) && 
+                    !newTitlesInUpdate.has(item.title)
+                ).map(item => {
+                    // Mark as processed and track for this update
+                    processedTitles.add(item.title);
+                    newTitlesInUpdate.add(item.title);
+                    return {
+                        ...item,
+                        category: feed.category,
+                        source: `VnExpress - ${feed.category}`
+                    };
+                });
+                
+                if (newItems.length > 0) {
+                    newItemsFound.push(...newItems);
+                    console.log(`Found ${newItems.length} new items from ${feed.category}`);
+                }
+                
+            } catch (error) {
+                console.log(`Failed to fetch updates from ${feed.category}:`, error.message);
+                // Continue to next feed even if this one fails
+            }
+        }
+        
+        if (newItemsFound.length > 0) {
+            // Add new items to the existing list
+            allNewsItems.push(...newItemsFound);
+            
+            // Update display with new items
+            updateNewsDisplay();
+            
+            // Show notification for new items
+            showProgressNotification(`${newItemsFound.length} tin tức mới đã được cập nhật!`, 'success');
+            console.log(`Added ${newItemsFound.length} new news items from ${newItemsFound.length} feeds`);
+        } else {
+            console.log('No new news items found in this update cycle');
+        }
+    }, 5 * 60 * 1000); // 5 minutes in milliseconds
+}
+
+// Update news display with current items
+function updateNewsDisplay() {
+    const content = document.getElementById('news-content');
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayNews = allNewsItems.filter(item => {
+        const newsDate = new Date(item.pubDate);
+        return newsDate >= today;
+    });
+    
+    // Sort by publication date (newest first)
+    todayNews.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+    
+    if (todayNews.length > 0) {
+        const newsHtml = todayNews.map(item => `
+            <div class="news-item" onclick="window.open('${item.link}', '_blank')">
+                <div class="news-image">
+                    ${item.image ? `<img src="${item.image}" alt="${item.title}">` : '<i class="fas fa-newspaper"></i>'}
+                </div>
+                <div class="news-content">
+                    <h4 class="news-title">${item.title}</h4>
+                    <p class="news-description">${item.description}</p>
+                    <div class="news-meta">
+                        <span class="news-source">${item.source}</span>
+                        <span class="news-time">${formatNewsDate(item.pubDate)}</span>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        
+        content.innerHTML = `
+            <div class="news-header">
+                <h3>Tin tức hôm nay - VnExpress</h3>
+                <small style="color: #888;">Nguồn: ${todayNews.length} tin từ ${vnexpressFeeds.length} chuyên mục</small>
+            </div>
+            <div class="news-list">
+                ${newsHtml}
+            </div>
+        `;
+    }
+}
