@@ -162,11 +162,34 @@ const enemy5ImgSrc = null;  // Dragonfly - Replace with your dragonfly GIF
 
 // Other images (optional):
 const hitImgSrc = null;      // Hit/explosion effect - Replace with your effect GIF
-const powerUpImgSrc = null;  // Star power-up - Replace with your power-up GIF
+// Enemy image loading system
+const enemyImages = {};
+const enemyImgSources = {
+    housefly: enemy1ImgSrc,
+    bee: enemy2ImgSrc,
+    wasp: enemy3ImgSrc,
+    mosquito: enemy4ImgSrc,
+    dragonfly: enemy5ImgSrc
+};
+
+// Load enemy images
+Object.keys(enemyImgSources).forEach(type => {
+    if (enemyImgSources[type]) {
+        const img = new Image();
+        img.onload = () => {
+            enemyImages[type] = img;
+            console.log(`Loaded enemy image for ${type}`);
+        };
+        img.onerror = () => {
+            console.error(`Failed to load enemy image for ${type}: ${enemyImgSources[type]}`);
+        };
+        img.src = enemyImgSources[type];
+    }
+});
 // =================================================================
 
 // Image sources - using PNG for player (more reliable than GIF)
-const playerImgSrc = "https://static.vecteezy.com/system/resources/thumbnails/051/554/908/small/retro-rocket-primed-for-launch-png.png" // Rocket PNG
+const playerImgSrc = "https://www.pngplay.com/wp-content/uploads/2/Trollface-No-Background.png"
 
     const playerSize = 60;
     const enemySize = 40;
@@ -1069,73 +1092,104 @@ let useBackgroundImages = backgroundImages.length > 0;
                 const wobbleX = Math.sin(enemy.wobble) * enemy.wobbleAmount * 0.3;
                 const drawX = enemy.x + wobbleX;
                 const drawY = enemy.y + (enemy.verticalOffset || 0);
-                
+                    
                 // Draw animated enemy
                 const time = Date.now() * 0.001;
-                
-                // Enemy body with animated breathing effect and alternating shapes
-                const breathe = Math.sin(time * 4 + enemy.wobble) * 0.02 + 1;
-                const bodyWidth = enemy.width * breathe;
-                const bodyHeight = enemy.height * breathe;
-                
-                ctx.fillStyle = enemy.color || '#FF0000';
-                
-                if (enemy.shape === 'round') {
-                    // Round enemy with perfect circle
-                    const centerX = drawX + enemy.width / 2;
-                    const centerY = drawY + enemy.height / 2;
-                    const radius = Math.min(enemy.width, enemy.height) / 2 * breathe;
                     
-                    ctx.beginPath();
-                    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-                    ctx.fill();
-                } else if (enemy.shape === 'square') {
-                    // Square enemy with rounded corners
-                    const cornerRadius = 8; // Rounded corner radius
+                // Check if enemy image is available and use it, otherwise use colored shapes
+                const enemyImg = enemyImages[enemy.type];
                     
-                    ctx.beginPath();
-                    ctx.moveTo(drawX + cornerRadius, drawY);
-                    ctx.lineTo(drawX + bodyWidth - cornerRadius, drawY);
-                    ctx.quadraticCurveTo(drawX + bodyWidth, drawY, drawX + bodyWidth, drawY + cornerRadius);
-                    ctx.lineTo(drawX + bodyWidth, drawY + bodyHeight - cornerRadius);
-                    ctx.quadraticCurveTo(drawX + bodyWidth, drawY + bodyHeight, drawX + bodyWidth - cornerRadius, drawY + bodyHeight);
-                    ctx.lineTo(drawX + cornerRadius, drawY + bodyHeight);
-                    ctx.quadraticCurveTo(drawX, drawY + bodyHeight, drawX, drawY + bodyHeight - cornerRadius);
-                    ctx.lineTo(drawX, drawY + cornerRadius);
-                    ctx.quadraticCurveTo(drawX, drawY, drawX + cornerRadius, drawY);
-                    ctx.closePath();
-                    ctx.fill();
-                } else if (enemy.shape === 'rectangle') {
-                    // Rectangle enemy (wider than tall)
-                    ctx.fillRect(drawX, drawY, bodyWidth * 1.3, bodyHeight * 0.7);
-                } else if (enemy.shape === 'diamond') {
-                    // Diamond enemy (rotated square)
-                    const centerX = drawX + enemy.width / 2;
-                    const centerY = drawY + enemy.height / 2;
-                    const size = Math.min(enemy.width, enemy.height) / 2 * breathe;
-                    
-                    ctx.beginPath();
-                    ctx.moveTo(centerX, centerY - size);
-                    ctx.lineTo(centerX + size, centerY);
-                    ctx.lineTo(centerX, centerY + size);
-                    ctx.lineTo(centerX - size, centerY);
-                    ctx.closePath();
-                    ctx.fill();
+                if (enemyImg && enemyImg.complete) {
+                    // Draw enemy image with breathing animation
+                    const breathe = Math.sin(time * 4 + enemy.wobble) * 0.02 + 1;
+                    const scaledWidth = enemy.width * breathe;
+                    const scaledHeight = enemy.height * breathe;
+                        
+                    // Center the scaled image
+                    const drawImgX = drawX + (enemy.width - scaledWidth) / 2;
+                    const drawImgY = drawY + (enemy.height - scaledHeight) / 2;
+                        
+                    ctx.drawImage(enemyImg, drawImgX, drawImgY, scaledWidth, scaledHeight);
+                } else {
+                    // Fallback to colored shapes with animated breathing effect
+                    const breathe = Math.sin(time * 4 + enemy.wobble) * 0.02 + 1;
+                    const bodyWidth = enemy.width * breathe;
+                    const bodyHeight = enemy.height * breathe;
+                        
+                    ctx.fillStyle = enemy.color || '#FF0000';
+                        
+                    if (enemy.shape === 'round') {
+                        // Round enemy with perfect circle
+                        const centerX = drawX + enemy.width / 2;
+                        const centerY = drawY + enemy.height / 2;
+                        const radius = Math.min(enemy.width, enemy.height) / 2 * breathe;
+                            
+                        ctx.beginPath();
+                        ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else if (enemy.shape === 'square') {
+                        // Square enemy with rounded corners
+                        const cornerRadius = 8; // Rounded corner radius
+                            
+                        ctx.beginPath();
+                        ctx.moveTo(drawX + cornerRadius, drawY);
+                        ctx.lineTo(drawX + bodyWidth - cornerRadius, drawY);
+                        ctx.quadraticCurveTo(drawX + bodyWidth, drawY, drawX + bodyWidth, drawY + cornerRadius);
+                        ctx.lineTo(drawX + bodyWidth, drawY + bodyHeight - cornerRadius);
+                        ctx.quadraticCurveTo(drawX + bodyWidth, drawY + bodyHeight, drawX + bodyWidth - cornerRadius, drawY + bodyHeight);
+                        ctx.lineTo(drawX + cornerRadius, drawY + bodyHeight);
+                        ctx.quadraticCurveTo(drawX, drawY + bodyHeight, drawX, drawY + bodyHeight - cornerRadius);
+                        ctx.lineTo(drawX, drawY + cornerRadius);
+                        ctx.quadraticCurveTo(drawX, drawY, drawX + cornerRadius, drawY);
+                        ctx.closePath();
+                        ctx.fill();
+                    } else if (enemy.shape === 'rectangle') {
+                        // Rectangle enemy with rounded corners
+                        const cornerRadius = 6;
+                            
+                        ctx.beginPath();
+                        ctx.moveTo(drawX + cornerRadius, drawY);
+                        ctx.lineTo(drawX + bodyWidth - cornerRadius, drawY);
+                        ctx.quadraticCurveTo(drawX + bodyWidth, drawY, drawX + bodyWidth, drawY + cornerRadius);
+                        ctx.lineTo(drawX + bodyWidth, drawY + bodyHeight - cornerRadius);
+                        ctx.quadraticCurveTo(drawX + bodyWidth, drawY + bodyHeight, drawX + bodyWidth - cornerRadius, drawY + bodyHeight);
+                        ctx.lineTo(drawX + cornerRadius, drawY + bodyHeight);
+                        ctx.quadraticCurveTo(drawX, drawY + bodyHeight, drawX, drawY + bodyHeight - cornerRadius);
+                        ctx.lineTo(drawX, drawY + cornerRadius);
+                        ctx.quadraticCurveTo(drawX, drawY, drawX + cornerRadius, drawY);
+                        ctx.closePath();
+                        ctx.fill();
+                    } else if (enemy.shape === 'diamond') {
+                        // Diamond shape
+                        const centerX = drawX + enemy.width / 2;
+                        const centerY = drawY + enemy.height / 2;
+                        const halfWidth = bodyWidth / 2;
+                        const halfHeight = bodyHeight / 2;
+                            
+                        ctx.beginPath();
+                        ctx.moveTo(centerX, drawY);
+                        ctx.lineTo(centerX + halfWidth, centerY);
+                        ctx.lineTo(centerX, centerY + halfHeight);
+                        ctx.lineTo(centerX - halfWidth, centerY);
+                        ctx.lineTo(centerX, drawY - halfHeight);
+                        ctx.closePath();
+                        ctx.fill();
+                    }
                 }
-                
+                    
                 // Enhanced animated wings with rounded corners and stronger flapping
                 const wingFlap = Math.sin(time * 20) * 0.5 + 0.5; // Stronger flapping (0 to 1 range)
                 ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-                
+                    
                 // Left wing with rounded corners
                 ctx.save();
                 ctx.translate(drawX, drawY + enemy.height/2);
                 ctx.rotate(-wingFlap * 0.8); // Stronger rotation
-                
+                    
                 const wingWidth = enemy.width * 0.4;
                 const wingHeight = enemy.height * 0.6;
                 const wingRadius = 5;
-                
+                    
                 ctx.beginPath();
                 ctx.moveTo(-wingWidth, -wingHeight/2 + wingRadius);
                 ctx.lineTo(-wingWidth, wingHeight/2 - wingRadius);
