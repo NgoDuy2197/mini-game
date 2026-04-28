@@ -9,24 +9,23 @@ let currentTheme = null; // Store current theme
 const READ_NEWS_KEY = 'dashboard_read_news';
 let readNewsTitles = new Set();
 
+// Normalize title for consistent tracking
+function normalizeNewsTitle(title) {
+    return title.trim().toLowerCase();
+}
+
 // Initialize read news from localStorage
 function initializeReadNews() {
     try {
         const stored = localStorage.getItem(READ_NEWS_KEY);
         if (stored) {
             const data = JSON.parse(stored);
-            // Clear old entries (older than 24 hours)
-            const now = Date.now();
-            const oneDayAgo = now - (24 * 60 * 60 * 1000);
             
+            // Load all read news without automatic cleanup
             Object.keys(data).forEach(title => {
-                if (data[title] > oneDayAgo) {
-                    readNewsTitles.add(title);
-                }
+                const normalizedTitle = normalizeNewsTitle(title);
+                readNewsTitles.add(normalizedTitle);
             });
-            
-            // Save cleaned data
-            saveReadNews();
         }
     } catch (error) {
         console.error('Error loading read news:', error);
@@ -36,13 +35,15 @@ function initializeReadNews() {
 
 // Mark news as read
 function markNewsAsRead(title) {
-    readNewsTitles.add(title);
+    const normalizedTitle = normalizeNewsTitle(title);
+    readNewsTitles.add(normalizedTitle);
     saveReadNews();
 }
 
 // Check if news is read
 function isNewsRead(title) {
-    return readNewsTitles.has(title);
+    const normalizedTitle = normalizeNewsTitle(title);
+    return readNewsTitles.has(normalizedTitle);
 }
 
 // Save read news to localStorage
@@ -55,24 +56,6 @@ function saveReadNews() {
         localStorage.setItem(READ_NEWS_KEY, JSON.stringify(data));
     } catch (error) {
         console.error('Error saving read news:', error);
-    }
-}
-
-// Clean old read news (older than 24 hours)
-function cleanOldReadNews() {
-    const now = Date.now();
-    const oneDayAgo = now - (24 * 60 * 60 * 1000);
-    let hasChanges = false;
-    
-    readNewsTitles.forEach(title => {
-        // This is a simplified approach - in reality we'd need to store timestamps
-        // For now, we'll clean the entire set daily
-        hasChanges = true;
-    });
-    
-    if (hasChanges) {
-        readNewsTitles.clear();
-        saveReadNews();
     }
 }
 
@@ -229,6 +212,18 @@ function parseRSSFeed(xmlDoc) {
             source: 'VnExpress'
         });
     }
+    
+    // Sort by newest first (descending order by publication date)
+    newsItems.sort((a, b) => {
+        try {
+            const dateA = new Date(a.pubDate);
+            const dateB = new Date(b.pubDate);
+            return dateB - dateA; // Newest first
+        } catch (error) {
+            // If date parsing fails, keep original order
+            return 0;
+        }
+    });
     
     return newsItems;
 }
@@ -618,6 +613,18 @@ async function loadNewsData() {
                 
                 // Add new items to the main array
                 allNewsItems.push(...newItems);
+                
+                // Sort all items by newest first
+                allNewsItems.sort((a, b) => {
+                    try {
+                        const dateA = new Date(a.pubDate);
+                        const dateB = new Date(b.pubDate);
+                        return dateB - dateA; // Newest first
+                    } catch (error) {
+                        // If date parsing fails, keep original order
+                        return 0;
+                    }
+                });
                 
                 const feedEndTime = Date.now();
                 const feedTotalTime = feedEndTime - feedStartTime;
@@ -1935,6 +1942,18 @@ function startNewsUpdates() {
         if (newItemsFound.length > 0) {
             // Add new items to the existing list
             allNewsItems.push(...newItemsFound);
+            
+            // Sort all items by newest first
+            allNewsItems.sort((a, b) => {
+                try {
+                    const dateA = new Date(a.pubDate);
+                    const dateB = new Date(b.pubDate);
+                    return dateB - dateA; // Newest first
+                } catch (error) {
+                    // If date parsing fails, keep original order
+                    return 0;
+                }
+            });
             
             // Update display with new items
             updateNewsDisplay();

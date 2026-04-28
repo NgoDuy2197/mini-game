@@ -32,54 +32,653 @@
       will-change: transform;
       text-shadow: 0 0 2px #000;
     }
+
+    /* Control Panel */
+    .control-panel {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(10px);
+      padding: 20px;
+      border-radius: 15px;
+      color: white;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      z-index: 10000;
+      min-width: 250px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: transform 0.3s ease;
+    }
+
+    .control-panel:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .control-panel h3 {
+      margin: 0 0 15px 0;
+      font-size: 18px;
+      text-align: center;
+      color: #87CEEB;
+      text-shadow: 0 0 10px rgba(135, 206, 235, 0.5);
+    }
+
+    .control-group {
+      margin-bottom: 15px;
+    }
+
+    .control-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #B0E0E6;
+    }
+
+    .slider {
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.2);
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #87CEEB;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(135, 206, 235, 0.5);
+      transition: all 0.3s ease;
+    }
+
+    .slider::-webkit-slider-thumb:hover {
+      background: #ADD8E6;
+      transform: scale(1.2);
+    }
+
+    .slider::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #87CEEB;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(135, 206, 235, 0.5);
+      transition: all 0.3s ease;
+    }
+
+    .theme-buttons {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .theme-btn {
+      padding: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.3s ease;
+    }
+
+    .theme-btn:hover {
+      background: rgba(135, 206, 235, 0.3);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px rgba(135, 206, 235, 0.3);
+    }
+
+    .theme-btn.active {
+      background: rgba(135, 206, 235, 0.5);
+      border-color: #87CEEB;
+    }
+
+    .effect-btn {
+      padding: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.3s ease;
+    }
+
+    .effect-btn:hover {
+      background: rgba(135, 206, 235, 0.3);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px rgba(135, 206, 235, 0.3);
+    }
+
+    .effect-btn.active {
+      background: rgba(135, 206, 235, 0.5);
+      border-color: #87CEEB;
+    }
+
+    .toggle-btn {
+      padding: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      width: 100%;
+    }
+
+    .toggle-btn:hover {
+      background: rgba(135, 206, 235, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .toggle-btn.active {
+      background: rgba(135, 206, 235, 0.5);
+      border-color: #87CEEB;
+    }
+
+    .stats {
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+      font-size: 12px;
+      color: #B0E0E6;
+    }
+
+    .stats div {
+      margin-bottom: 3px;
+    }
+
+    /* Click effect */
+    .click-effect {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9998;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(135, 206, 235, 0.8) 0%, transparent 70%);
+      animation: ripple 0.6s ease-out;
+    }
+
+    @keyframes ripple {
+      0% {
+        transform: scale(0);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(3);
+        opacity: 0;
+      }
+    }
+
+    /* Tornado cursor effect */
+    .tornado-cursor {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9997;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: radial-gradient(circle, 
+        rgba(135, 206, 235, 0.3) 0%, 
+        rgba(135, 206, 235, 0.2) 20%, 
+        rgba(135, 206, 235, 0.1) 40%, 
+        transparent 70%);
+      transform: translate(-50%, -50%);
+      animation: tornado-spin 2s linear infinite;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .tornado-cursor.active {
+      opacity: 1;
+    }
+
+    @keyframes tornado-spin {
+      0% {
+        transform: translate(-50%, -50%) rotate(0deg);
+      }
+      100% {
+        transform: translate(-50%, -50%) rotate(360deg);
+      }
+    }
+
+    /* Tornado particles */
+    .tornado-particle {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9996;
+      width: 4px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 50%;
+      animation: tornado-particle-float 1s ease-out forwards;
+    }
+
+    @keyframes tornado-particle-float {
+      0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 0.8;
+      }
+      100% {
+        transform: translate(var(--tx), var(--ty)) scale(0);
+        opacity: 0;
+      }
+    }
+
+    /* Rain effect */
+    .raindrop {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      width: 2px;
+      height: 15px;
+      background: linear-gradient(to bottom, transparent, rgba(174, 194, 224, 0.6), rgba(174, 194, 224, 0.8));
+      border-radius: 0 0 2px 2px;
+      animation: rain-fall linear forwards;
+    }
+
+    @keyframes rain-fall {
+      to {
+        transform: translateY(100vh);
+      }
+    }
+
+    /* Fireworks */
+    .firework {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9995;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      animation: firework-explode 1.5s ease-out forwards;
+    }
+
+    @keyframes firework-explode {
+      0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: translate(var(--fx), var(--fy)) scale(3);
+        opacity: 0.8;
+      }
+      100% {
+        transform: translate(var(--fx2), var(--fy2)) scale(0.5);
+        opacity: 0;
+      }
+    }
+
+    /* Sparkle effect */
+    .sparkle {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9994;
+      width: 6px;
+      height: 6px;
+      background: radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 100, 0.8) 50%, transparent 70%);
+      border-radius: 50%;
+      animation: sparkle-float 2s ease-out forwards;
+    }
+
+    @keyframes sparkle-float {
+      0% {
+        transform: translate(0, 0) scale(0) rotate(0deg);
+        opacity: 1;
+      }
+      50% {
+        transform: translate(var(--sx), var(--sy)) scale(1.5) rotate(180deg);
+        opacity: 0.8;
+      }
+      100% {
+        transform: translate(var(--sx2), var(--sy2)) scale(0) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    /* Lightning effect */
+    .lightning {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9993;
+      width: 2px;
+      height: 100vh;
+      background: linear-gradient(to bottom, 
+        transparent 0%, 
+        rgba(255, 255, 255, 0.8) 10%, 
+        rgba(200, 200, 255, 1) 50%, 
+        rgba(255, 255, 255, 0.8) 90%, 
+        transparent 100%);
+      left: var(--lx);
+      animation: lightning-flash 0.3s ease-out forwards;
+      filter: blur(1px);
+    }
+
+    @keyframes lightning-flash {
+      0% {
+        opacity: 0;
+        transform: scaleY(0);
+      }
+      50% {
+        opacity: 1;
+        transform: scaleY(1);
+      }
+      100% {
+        opacity: 0;
+        transform: scaleY(0);
+      }
+    }
+
+    /* Heart effect */
+    .heart {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9992;
+      color: rgba(255, 105, 180, 0.8);
+      font-size: 20px;
+      animation: heart-float 3s ease-out forwards;
+    }
+
+    @keyframes heart-float {
+      0% {
+        transform: translate(0, 0) scale(0) rotate(0deg);
+        opacity: 1;
+      }
+      50% {
+        transform: translate(var(--hx), var(--hy)) scale(1.2) rotate(-10deg);
+        opacity: 0.8;
+      }
+      100% {
+        transform: translate(var(--hx2), var(--hy2)) scale(0.8) rotate(10deg);
+        opacity: 0;
+      }
+    }
+
+    /* Star burst effect */
+    .star-burst {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9991;
+      color: rgba(255, 223, 0, 0.9);
+      font-size: 16px;
+      animation: star-burst-explode 1.5s ease-out forwards;
+    }
+
+    @keyframes star-burst-explode {
+      0% {
+        transform: translate(0, 0) scale(0) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(var(--sbx), var(--sby)) scale(2) rotate(720deg);
+        opacity: 0;
+      }
+    }
+
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+      .control-panel {
+        top: 10px;
+        right: 10px;
+        padding: 15px;
+        min-width: 200px;
+      }
+
+      .control-panel h3 {
+        font-size: 16px;
+      }
+
+      .theme-buttons {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
 
+<!-- Control Panel -->
+<div class="control-panel">
+  <h3>🌨️ Điều Khiển Tuyết</h3>
+  
+  <div class="control-group">
+    <label for="snowIntensity">Cường độ tuyết: <span id="intensityValue">150</span>ms</label>
+    <input type="range" id="snowIntensity" class="slider" min="50" max="500" value="150" step="10">
+  </div>
+  
+  <div class="control-group">
+    <label for="windForce">Sức mạnh gió: <span id="windValue">80</span>px</label>
+    <input type="range" id="windForce" class="slider" min="0" max="200" value="80" step="5">
+  </div>
+  
+  <div class="control-group">
+    <label for="snowSize">Kích thước tuyết: <span id="sizeValue">14</span>px</label>
+    <input type="range" id="snowSize" class="slider" min="8" max="30" value="14" step="1">
+  </div>
+  
+  <div class="control-group">
+    <label>Loại hiệu ứng:</label>
+    <div class="theme-buttons">
+      <button class="effect-btn active" data-effect="snow">❄️ Tuyết</button>
+      <button class="effect-btn" data-effect="rain">🌧 Mưa</button>
+      <button class="effect-btn" data-effect="mixed">🌈 Hỗn hợp</button>
+    </div>
+  </div>
+  
+  <div class="control-group">
+    <label>Nền cảnh:</label>
+    <div class="theme-buttons">
+      <button class="theme-btn active" data-theme="winter">❄️ Mùa đông</button>
+      <button class="theme-btn" data-theme="night">🌙 Đêm sao</button>
+      <button class="theme-btn" data-theme="forest">🌲 Rừng sâu</button>
+      <button class="theme-btn" data-theme="city">🏙️ Thành phố</button>
+      <button class="theme-btn" data-theme="gradient">🎨 Gradient</button>
+      <button class="theme-btn" data-theme="dark">⬛ Đen tuyền</button>
+    </div>
+  </div>
+  
+  <div class="control-group">
+    <button id="tornadoToggle" class="toggle-btn">🌪️ Lốc xoáy: TẮT</button>
+  </div>
+  
+  <div class="control-group">
+    <button id="musicToggle" class="toggle-btn">🎵 Nhạc nền: TẮT</button>
+  </div>
+  
+  <div class="control-group">
+    <button id="pauseToggle" class="toggle-btn">⏸️ Tạm dừng</button>
+  </div>
+  
+  <div class="stats">
+    <div>Hiệu ứng: <span id="effectStatus">Tuyết</span></div>
+    <div>Particles: <span id="snowCount">0</span></div>
+    <div>Wind: <span id="currentWind">0</span>px</div>
+    <div>FPS: <span id="fps">60</span></div>
+    <div>Tornado: <span id="tornadoStatus">Vô hiệu</span></div>
+  </div>
+</div>
+
+<!-- Tornado cursor effect -->
+<div class="tornado-cursor" id="tornadoCursor"></div>
+
 <script>
   const snowflakeChars = ['❄️', '❅', '❆'];
 
+  // Global variables
   let windOffset = 0;
   let targetWindOffset = 0;
-  let windChangeSpeed = 0.5; // tốc độ thay đổi gió (pixels mỗi frame)
+  let windChangeSpeed = 0.5;
+  let snowInterval = 150;
+  let maxWindForce = 80;
+  let baseSnowSize = 14;
+  let isPaused = false;
+  let snowflakeCount = 0;
+  let lastFrameTime = performance.now();
+  let fps = 60;
+  let audioContext = null;
+  let musicPlaying = false;
+  let tornadoEnabled = false;
+  let mouseX = 0;
+  let mouseY = 0;
+  let tornadoRadius = 100;
+  let tornadoForce = 150;
+  let currentEffect = 'snow'; // snow, rain, mixed
+  let particleCreationInterval = null;
+
+  // Background themes
+  const themes = {
+    winter: 'https://www.josephfiler.com/images/xl/Canada-Rockies-3613-Edit-Edit.jpg',
+    night: 'https://www.publicdomainpictures.net/pictures/320000/velka/starry-night-sky-picture.jpg',
+    forest: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Winter_forest_landscape.jpg/1280px-Winter_forest_landscape.jpg',
+    city: 'https://images.unsplash.com/photo-1514565131-fce0801e5785',
+    gradient: 'linear-gradient(180deg, #0f2027, #203a43, #2c5364)',
+    dark: '#000000'
+  };
 
   function lerp(a, b, t) {
     return a + (b - a) * t;
   }
 
+  // Initialize audio context
+  function initAudio() {
+    if (!audioContext) {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+  }
+
+  // Create simple winter music
+  function playWinterMusic() {
+    if (!audioContext || musicPlaying) return;
+    
+    musicPlaying = true;
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    // Create a simple winter melody
+    const notes = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88]; // C major scale
+    let noteIndex = 0;
+    
+    function playNote() {
+      if (!musicPlaying) return;
+      
+      oscillator.frequency.setValueAtTime(notes[noteIndex], audioContext.currentTime);
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+      
+      noteIndex = (noteIndex + 1) % notes.length;
+      setTimeout(playNote, 500);
+    }
+    
+    oscillator.start();
+    playNote();
+  }
+
+  function stopWinterMusic() {
+    musicPlaying = false;
+  }
+
   function createSnowflake() {
+    if (isPaused) return;
+    
     const snowflake = document.createElement('div');
     snowflake.classList.add('snowflake');
     snowflake.innerText = snowflakeChars[Math.floor(Math.random() * snowflakeChars.length)];
 
-    const size = Math.random() * 10 + 10;
+    const sizeVariation = Math.random() * 10 + 5;
+    const size = baseSnowSize + sizeVariation;
     const startLeft = Math.random() * window.innerWidth;
     const fallDuration = Math.random() * 5 + 5;
     const swayAmplitude = Math.random() * 30 + 20;
     const swayFrequency = Math.random() * 0.5 + 0.5;
 
+    // Store initial position for tornado calculations
+    let currentX = startLeft;
+    let currentY = 0;
+    let velocityX = 0;
+    let velocityY = 1;
+
     snowflake.style.left = `${startLeft}px`;
     snowflake.style.fontSize = `${size}px`;
+    snowflake.style.opacity = 0.6 + Math.random() * 0.4;
 
     document.body.appendChild(snowflake);
+    snowflakeCount++;
+    updateStats();
 
     let startTime = null;
 
     function animateFrame(time) {
+      if (isPaused) {
+        requestAnimationFrame(animateFrame);
+        return;
+      }
+      
       if (!startTime) startTime = time;
       const elapsed = (time - startTime) / 1000;
       const progress = elapsed / fallDuration;
 
       if (progress >= 1) {
         snowflake.remove();
+        snowflakeCount--;
+        updateStats();
         return;
       }
 
-      // Gió thay đổi từ từ
+      // Smooth wind transition
       windOffset = lerp(windOffset, targetWindOffset, 0.01 * windChangeSpeed);
 
-      const x = swayAmplitude * Math.sin(swayFrequency * elapsed * 2 * Math.PI) + windOffset;
-      const y = progress * window.innerHeight;
+      let x = swayAmplitude * Math.sin(swayFrequency * elapsed * 2 * Math.PI) + windOffset;
+      let y = progress * window.innerHeight;
+
+      // Apply tornado effect if enabled
+      if (tornadoEnabled) {
+        const dx = currentX - mouseX;
+        const dy = currentY - mouseY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < tornadoRadius && distance > 0) {
+          // Calculate repulsion force (stronger when closer)
+          const force = (1 - distance / tornadoRadius) * tornadoForce;
+          const angle = Math.atan2(dy, dx);
+          
+          // Apply force to velocity
+          velocityX += Math.cos(angle) * force * 0.01;
+          velocityY += Math.sin(angle) * force * 0.01;
+          
+          // Add some randomness for tornado effect
+          velocityX += (Math.random() - 0.5) * 2;
+          velocityY += (Math.random() - 0.5) * 2;
+          
+          // Apply damping
+          velocityX *= 0.95;
+          velocityY *= 0.95;
+          
+          // Update position based on velocity
+          currentX += velocityX;
+          currentY += velocityY;
+          
+          // Override regular position with tornado-affected position
+          x = currentX - startLeft;
+          y = currentY;
+        } else {
+          // Reset to normal movement when outside tornado range
+          currentX = startLeft + x;
+          currentY = y;
+          velocityX *= 0.9;
+          velocityY *= 0.9;
+        }
+      }
 
       snowflake.style.transform = `translate(${x}px, ${y}px)`;
       requestAnimationFrame(animateFrame);
@@ -88,21 +687,420 @@
     requestAnimationFrame(animateFrame);
   }
 
-  // Tạo tuyết liên tục
-  setInterval(createSnowflake, 150);
+  // Create tornado particles effect
+  function createTornadoParticle(x, y) {
+    const particle = document.createElement('div');
+    particle.classList.add('tornado-particle');
+    
+    const angle = Math.random() * Math.PI * 2;
+    const distance = Math.random() * 50 + 20;
+    const tx = Math.cos(angle) * distance;
+    const ty = Math.sin(angle) * distance;
+    
+    particle.style.setProperty('--tx', `${tx}px`);
+    particle.style.setProperty('--ty', `${ty}px`);
+    particle.style.left = `${x}px`;
+    particle.style.top = `${y}px`;
+    
+    document.body.appendChild(particle);
+    setTimeout(() => particle.remove(), 1000);
+  }
 
-  // Đổi gió ngẫu nhiên theo thời gian
+  // Create raindrop
+  function createRaindrop() {
+    const raindrop = document.createElement('div');
+    raindrop.classList.add('raindrop');
+    
+    const startX = Math.random() * window.innerWidth;
+    const duration = Math.random() * 1 + 0.5;
+    
+    raindrop.style.left = `${startX}px`;
+    raindrop.style.animationDuration = `${duration}s`;
+    
+    document.body.appendChild(raindrop);
+    snowflakeCount++;
+    updateStats();
+    
+    setTimeout(() => {
+      raindrop.remove();
+      snowflakeCount--;
+      updateStats();
+    }, duration * 1000);
+  }
+
+  // Create firework
+  function createFirework(x, y) {
+    for (let i = 0; i < 12; i++) {
+      const particle = document.createElement('div');
+      particle.classList.add('firework');
+      
+      const angle = (Math.PI * 2 * i) / 12;
+      const distance = Math.random() * 80 + 40;
+      const fx = Math.cos(angle) * distance;
+      const fy = Math.sin(angle) * distance;
+      const fx2 = Math.cos(angle) * distance * 1.5;
+      const fy2 = Math.sin(angle) * distance * 1.5;
+      
+      particle.style.setProperty('--fx', `${fx}px`);
+      particle.style.setProperty('--fy', `${fy}px`);
+      particle.style.setProperty('--fx2', `${fx2}px`);
+      particle.style.setProperty('--fy2', `${fy2}px`);
+      particle.style.left = `${x}px`;
+      particle.style.top = `${y}px`;
+      particle.style.background = `hsl(${Math.random() * 360}, 100%, 60%)`;
+      
+      document.body.appendChild(particle);
+      setTimeout(() => particle.remove(), 1500);
+    }
+  }
+
+  // Create sparkle
+  function createSparkle(x, y) {
+    const sparkle = document.createElement('div');
+    sparkle.classList.add('sparkle');
+    
+    const sx = (Math.random() - 0.5) * 100;
+    const sy = (Math.random() - 0.5) * 100;
+    const sx2 = (Math.random() - 0.5) * 150;
+    const sy2 = (Math.random() - 0.5) * 150;
+    
+    sparkle.style.setProperty('--sx', `${sx}px`);
+    sparkle.style.setProperty('--sy', `${sy}px`);
+    sparkle.style.setProperty('--sx2', `${sx2}px`);
+    sparkle.style.setProperty('--sy2', `${sy2}px`);
+    sparkle.style.left = `${x}px`;
+    sparkle.style.top = `${y}px`;
+    
+    document.body.appendChild(sparkle);
+    setTimeout(() => sparkle.remove(), 2000);
+  }
+
+  // Create lightning
+  function createLightning() {
+    const lightning = document.createElement('div');
+    lightning.classList.add('lightning');
+    
+    const x = Math.random() * window.innerWidth;
+    
+    lightning.style.setProperty('--lx', `${x}px`);
+    
+    document.body.appendChild(lightning);
+    
+    // Flash effect
+    setTimeout(() => {
+      document.body.style.filter = 'brightness(2)';
+      setTimeout(() => {
+        document.body.style.filter = 'brightness(1)';
+      }, 100);
+    }, 150);
+    
+    setTimeout(() => lightning.remove(), 300);
+  }
+
+  // Create heart
+  function createHeart(x, y) {
+    const heart = document.createElement('div');
+    heart.classList.add('heart');
+    heart.innerText = '❤️';
+    
+    const hx = (Math.random() - 0.5) * 80;
+    const hy = -Math.random() * 100 - 20;
+    const hx2 = (Math.random() - 0.5) * 120;
+    const hy2 = -Math.random() * 150 - 30;
+    
+    heart.style.setProperty('--hx', `${hx}px`);
+    heart.style.setProperty('--hy', `${hy}px`);
+    heart.style.setProperty('--hx2', `${hx2}px`);
+    heart.style.setProperty('--hy2', `${hy2}px`);
+    heart.style.left = `${x}px`;
+    heart.style.top = `${y}px`;
+    
+    document.body.appendChild(heart);
+    setTimeout(() => heart.remove(), 3000);
+  }
+
+  // Create star burst
+  function createStarBurst(x, y) {
+    for (let i = 0; i < 8; i++) {
+      const star = document.createElement('div');
+      star.classList.add('star-burst');
+      star.innerText = '⭐';
+      
+      const angle = (Math.PI * 2 * i) / 8;
+      const distance = Math.random() * 60 + 30;
+      const sbx = Math.cos(angle) * distance;
+      const sby = Math.sin(angle) * distance;
+      
+      star.style.setProperty('--sbx', `${sbx}px`);
+      star.style.setProperty('--sby', `${sby}px`);
+      star.style.left = `${x}px`;
+      star.style.top = `${y}px`;
+      
+      document.body.appendChild(star);
+      setTimeout(() => star.remove(), 1500);
+    }
+  }
+
+  // Switch effect type
+  function switchEffect(effectType) {
+    currentEffect = effectType;
+    clearInterval(particleCreationInterval);
+    
+    // Clear existing particles
+    document.querySelectorAll('.snowflake, .raindrop').forEach(el => el.remove());
+    snowflakeCount = 0;
+    
+    // Update UI
+    document.getElementById('effectStatus').textContent = 
+      effectType === 'snow' ? 'Tuyết' :
+      effectType === 'rain' ? 'Mưa' : 'Hỗn hợp';
+    
+    // Start new effect
+    switch(effectType) {
+      case 'snow':
+        particleCreationInterval = setInterval(createSnowflake, snowInterval);
+        break;
+      case 'rain':
+        particleCreationInterval = setInterval(createRaindrop, 50);
+        break;
+      case 'mixed':
+        particleCreationInterval = setInterval(() => {
+          if (Math.random() < 0.7) {
+            createSnowflake();
+          } else {
+            createRaindrop();
+          }
+        }, snowInterval);
+        break;
+    }
+    
+    updateStats();
+  }
+
+  // Click effect
+  function createClickEffect(x, y, isRightClick = false) {
+    const effect = document.createElement('div');
+    effect.classList.add('click-effect');
+    effect.style.left = `${x - 15}px`;
+    effect.style.top = `${y - 15}px`;
+    document.body.appendChild(effect);
+    
+    setTimeout(() => effect.remove(), 600);
+    
+    // Create enhanced tornado burst if tornado is enabled
+    if (tornadoEnabled) {
+      for (let i = 0; i < 10; i++) {
+        setTimeout(() => {
+          createTornadoParticle(x, y);
+        }, i * 50);
+      }
+    }
+  }
+
+  // Update statistics
+  function updateStats() {
+    document.getElementById('snowCount').textContent = snowflakeCount;
+    document.getElementById('currentWind').textContent = Math.round(windOffset);
+    document.getElementById('fps').textContent = Math.round(fps);
+  }
+
+  // FPS counter
+  function updateFPS() {
+    const currentTime = performance.now();
+    const deltaTime = currentTime - lastFrameTime;
+    fps = 1000 / deltaTime;
+    lastFrameTime = currentTime;
+    updateStats();
+    requestAnimationFrame(updateFPS);
+  }
+
+  // Control panel event listeners
+  function setupControls() {
+    // Snow intensity
+    const intensitySlider = document.getElementById('snowIntensity');
+    const intensityValue = document.getElementById('intensityValue');
+    intensitySlider.addEventListener('input', (e) => {
+      snowInterval = parseInt(e.target.value);
+      intensityValue.textContent = snowInterval;
+      clearInterval(particleCreationInterval);
+      switchEffect(currentEffect);
+    });
+
+    // Wind force
+    const windSlider = document.getElementById('windForce');
+    const windValue = document.getElementById('windValue');
+    windSlider.addEventListener('input', (e) => {
+      maxWindForce = parseInt(e.target.value);
+      windValue.textContent = maxWindForce;
+    });
+
+    // Snow size
+    const sizeSlider = document.getElementById('snowSize');
+    const sizeValue = document.getElementById('sizeValue');
+    sizeSlider.addEventListener('input', (e) => {
+      baseSnowSize = parseInt(e.target.value);
+      sizeValue.textContent = baseSnowSize;
+    });
+
+    // Effect type buttons
+    const effectButtons = document.querySelectorAll('.effect-btn');
+    effectButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        effectButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        const effect = btn.dataset.effect;
+        switchEffect(effect);
+      });
+    });
+
+    // Tornado toggle
+    const tornadoToggle = document.getElementById('tornadoToggle');
+    const tornadoCursor = document.getElementById('tornadoCursor');
+    const tornadoStatus = document.getElementById('tornadoStatus');
+    
+    tornadoToggle.addEventListener('click', () => {
+      tornadoEnabled = !tornadoEnabled;
+      tornadoToggle.textContent = tornadoEnabled ? '🌪️ Lốc xoáy: BẬT' : '🌪️ Lốc xoáy: TẬT';
+      tornadoToggle.classList.toggle('active');
+      tornadoCursor.classList.toggle('active', tornadoEnabled);
+      tornadoStatus.textContent = tornadoEnabled ? 'Hoạt động' : 'Vô hiệu';
+    });
+
+    // Theme buttons
+    const themeButtons = document.querySelectorAll('.theme-btn');
+    themeButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        themeButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        const theme = btn.dataset.theme;
+        const themeUrl = themes[theme];
+        
+        if (theme === 'gradient') {
+          document.body.style.background = themeUrl;
+          document.body.style.backgroundSize = 'cover';
+        } else if (theme === 'dark') {
+          document.body.style.background = themeUrl;
+        } else {
+          document.body.style.backgroundImage = `url('${themeUrl}')`;
+          document.body.style.backgroundSize = 'cover';
+          document.body.style.backgroundPosition = 'center';
+          document.body.style.backgroundRepeat = 'no-repeat';
+        }
+      });
+    });
+
+    // Music toggle
+    const musicToggle = document.getElementById('musicToggle');
+    musicToggle.addEventListener('click', () => {
+      initAudio();
+      if (musicPlaying) {
+        stopWinterMusic();
+        musicToggle.textContent = '🎵 Nhạc nền: TẮT';
+        musicToggle.classList.remove('active');
+      } else {
+        playWinterMusic();
+        musicToggle.textContent = '🎵 Nhạc nền: BẬT';
+        musicToggle.classList.add('active');
+      }
+    });
+
+    // Pause toggle
+    const pauseToggle = document.getElementById('pauseToggle');
+    pauseToggle.addEventListener('click', () => {
+      isPaused = !isPaused;
+      pauseToggle.textContent = isPaused ? '▶️ Tiếp tục' : '⏸️ Tạm dừng';
+      pauseToggle.classList.toggle('active');
+    });
+  }
+
+  // Enhanced wind change
   function changeWindTarget() {
-    // Tạo gió mới từ -80 → +80 px
-    targetWindOffset = Math.floor(Math.random() * 160 - 80);
-    // Ngẫu nhiên tốc độ gió thổi (mượt hay mạnh): 0.3 → 1.2
+    targetWindOffset = Math.floor(Math.random() * (maxWindForce * 2) - maxWindForce);
     windChangeSpeed = Math.random() * 0.9 + 0.3;
-
-    // Lặp lại sau 5–10 giây
     setTimeout(changeWindTarget, Math.random() * 5000 + 5000);
   }
 
+  // Mouse tracking for tornado effect
+  document.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+    
+    // Update tornado cursor position
+    const tornadoCursor = document.getElementById('tornadoCursor');
+    if (tornadoEnabled) {
+      tornadoCursor.style.left = `${mouseX}px`;
+      tornadoCursor.style.top = `${mouseY}px`;
+      
+      // Create tornado particles occasionally
+      if (Math.random() < 0.1) {
+        createTornadoParticle(mouseX, mouseY);
+      }
+    }
+  });
+
+  // Click interaction with tornado enhancement
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.control-panel')) {
+      createClickEffect(e.clientX, e.clientY, false);
+    }
+  });
+
+  // Right-click interaction for special effects
+  document.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    if (!e.target.closest('.control-panel')) {
+      createClickEffect(e.clientX, e.clientY, true);
+    }
+  });
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    switch(e.key) {
+      case ' ':
+        e.preventDefault();
+        isPaused = !isPaused;
+        document.getElementById('pauseToggle').textContent = isPaused ? '▶️ Tiếp tục' : '⏸️ Tạm dừng';
+        document.getElementById('pauseToggle').classList.toggle('active');
+        break;
+      case 'ArrowUp':
+        snowInterval = Math.max(50, snowInterval - 10);
+        document.getElementById('snowIntensity').value = snowInterval;
+        document.getElementById('intensityValue').textContent = snowInterval;
+        clearInterval(snowCreationInterval);
+        snowCreationInterval = setInterval(createSnowflake, snowInterval);
+        break;
+      case 'ArrowDown':
+        snowInterval = Math.min(500, snowInterval + 10);
+        document.getElementById('snowIntensity').value = snowInterval;
+        document.getElementById('intensityValue').textContent = snowInterval;
+        clearInterval(snowCreationInterval);
+        snowCreationInterval = setInterval(createSnowflake, snowInterval);
+        break;
+      case 't':
+      case 'T':
+        // Toggle tornado with T key
+        tornadoEnabled = !tornadoEnabled;
+        document.getElementById('tornadoToggle').textContent = tornadoEnabled ? '🌪️ Lốc xoáy: BẬT' : '🌪️ Lốc xoáy: TẬT';
+        document.getElementById('tornadoToggle').classList.toggle('active');
+        document.getElementById('tornadoCursor').classList.toggle('active', tornadoEnabled);
+        document.getElementById('tornadoStatus').textContent = tornadoEnabled ? 'Hoạt động' : 'Vô hiệu';
+        break;
+    }
+  });
+
+  // Initialize
+  let snowCreationInterval = setInterval(createSnowflake, snowInterval);
+  setupControls();
   changeWindTarget();
+  updateFPS();
+
+  // Welcome message
+  setTimeout(() => {
+    console.log('🌨️ Welcome to Interactive Snow! 🌨️');
+    console.log('Controls: Space (pause), Arrow Up/Down (intensity), Click (create snow burst)');
+  }, 1000);
 </script>
 
 </body>
